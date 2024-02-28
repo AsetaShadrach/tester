@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+
+*.lock
+*.env
+
+*.lock
+*.log
+package-lock.json
+
+**/transactions

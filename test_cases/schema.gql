@@ -1,0 +1,269 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type RequestDetailsObject {
+  """ID of the user initiating the test request"""
+  initiatedBy: String!
+  url: String!
+  requestType: String
+  bodyType: String
+  queryParams: [String!]
+  bodyParams: [String!]
+  reqText: String
+}
+
+type RequestHistoryObject {
+  request: RequestDetailsObject
+  response: [String!]
+  requestedAt: String
+  respondedAt: String
+}
+
+type TestCase {
+  id: ID!
+  testCase: String!
+  createdBy: String!
+  description: String!
+  groupId: String
+  testType: String
+  testReportRecipients: String
+  retryAfterSuccess: Boolean
+  status: String
+  retryMaxAttempts: Int!
+  retryAttempts: Int
+  retryIntervals: Int!
+  requestDetails: RequestDetailsObject!
+  requestHistory: [RequestHistoryObject!]
+  lastUpdatedBy: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Query {
+  getHello: String!
+  filterTestCases(filterParams: FilterTestCasesParams!): TestCaseQueryResponse!
+}
+
+union TestCaseQueryResponse = GenericTypeObject | FilterTestCasesResponse
+
+type GenericTypeObject {
+  httpStatus: Int
+  message: String
+  response: JSON
+  responseDescription: String
+  errors: [JSON!]
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+type FilterTestCasesResponse {
+  count: Int!
+  items: [TestCase!]!
+}
+
+input FilterTestCasesParams {
+  page: Int!
+  itemsPerPage: Int! = 10
+  orderBy: String
+
+  """asc or desc, default is desc if a value to order by has been set"""
+  order: String
+  params: TestCaseFilter
+}
+
+input TestCaseFilter {
+  """filter for IDs of the tes cases"""
+  id: String
+
+  """filter for string in name for your test case"""
+  testCase: String
+
+  """filter for ID of user that created the test case"""
+  createdBy: String
+
+  """filter for string in description"""
+  description: String
+
+  """filter for group names/IDs for test cases"""
+  groupId: String
+
+  """filter for test type e.g User Creation, Transactoin Recon"""
+  testType: String
+
+  """filter for run and save options"""
+  runAndSave: String
+
+  """filters list of report recipients, checks if if string is found"""
+  testReportRecipients: String
+
+  """filters for those set to retryAfterSuccess or not"""
+  retryAfterSuccess: Boolean
+
+  """filters for test case status"""
+  status: String
+
+  """
+  filters for any max attempts set to less than or equal to the value here
+  """
+  retryMaxAttemptsUpperLimit: Int
+
+  """
+  filters for any max attempts set to more than or equal to the value here
+  """
+  retryMaxAttemptsLowerLimit: Int
+
+  """
+  filters for any retry attempts that were less than or equal to the value here
+  """
+  retryAttemptsUpperLimit: Int
+
+  """
+  filters for any retry attempts that were more than or equal to the value here
+  """
+  retryAttemptsLowerLimit: Int
+
+  """
+  filters for any retry intervals set to less than or equal to the value here
+  """
+  retryIntervalsUpperLimit: Int
+
+  """
+  filters for any retry intervals set to more than or equal to the value here
+  """
+  retryIntervalsLowerLimit: Int
+
+  """filters for update dates equal-to/less than the date entered"""
+  updatedAtUpperLimit: String
+
+  """filters for update dates equal-to/more/greater than the date entered"""
+  updatedAtLowerLimit: String
+
+  """filters for create dates equal-to/less than the date entered"""
+  createdAtUpperLimit: String
+
+  """filters for create dates equal-to/more/greater than the date entered"""
+  createdAtLowerLimit: String
+
+  """filters for request details as per specification"""
+  requestDetails: RequestDetailsFilter
+}
+
+input RequestDetailsFilter {
+  """filters for ID of the user that initiated the test request"""
+  initiatedBy: String
+
+  """filters for URL where requests were/was sent to"""
+  url: String
+
+  """filters for method used in the request e.g GET or POST"""
+  requestType: String
+
+  """
+  filters for format of the request body e.g x-www-form-urlencoded, json etc
+  """
+  bodyType: String
+
+  """filters for key:value string in the list of query parameters."""
+  queryParam: String
+
+  """filters for key:value string in the list of body parameters"""
+  bodyParams: String
+
+  """
+  filters for string in the string containing reqText that was not passed as a bodyParam or queryParam
+  """
+  reqText: String
+}
+
+type Mutation {
+  createTestCase(params: TestCaseInput!): TestCaseMutateResponse!
+  updateTestCase(testCaseId: String!, updateParams: TestCaseInput!): TestCase!
+  runTestCase(tCRunOptions: RequestDetailsInput, tCId: String, tCSaveOption: String = "run_only", retryIntervals: Float = 1, retryMaxAttempts: Float = 1): TestCaseMutateResponse!
+}
+
+union TestCaseMutateResponse = TestCase | GenericTypeObject
+
+input TestCaseInput {
+  """unique user defined name for your test case"""
+  testCase: String!
+
+  """ID of user that created the test case"""
+  createdBy: String!
+
+  """brief description of your test case"""
+  description: String!
+
+  """
+  Unique ID/name for test cases you want to group together. By passing name/ID here, you effectively bundle the test case together with all other test cases sharing that group ID
+  """
+  groupId: String
+
+  """"Topic of the test case" e.g UserCreation, TransactionRecon"""
+  testType: String!
+
+  """If not empty , all mentioned keys will be masked if test case is saved"""
+  keysToMaskOnSave: [String!]
+
+  """Specifies what to do with the request whn run"""
+  runAndSave: String = "run_only"
+
+  """
+  Comma seperated string of emails. If specified, the emails in this string will recieve a report as per the specifications provided for the test case
+  """
+  testReportRecipients: String
+
+  """
+  Set to true if you want an iterative rerun of the test request evn after success
+  """
+  retryAfterSuccess: Boolean! = false
+
+  """Status of the current test case"""
+  status: String
+
+  """
+  Number of times to retry the request(Will only retry successfull test cases if `retryAfterSuccess` is set to true )
+  """
+  retryMaxAttempts: Int = 1
+
+  """Duration to wait before retrying the test case (in seconds)"""
+  retryIntervals: Int = 0
+
+  """Contains details of the request to be run in the test case"""
+  requestDetails: RequestDetailsInput
+}
+
+input RequestDetailsInput {
+  """ID of the user initiating the test request"""
+  initiatedBy: String!
+
+  """URL to send the request to"""
+  url: String!
+
+  """Sets method to use in the request e.g GET or POST"""
+  requestType: String
+
+  """
+  Format of the request body e.g pplication/x-www-form-urlencoded, application/json etc
+  """
+  bodyType: String!
+
+  """List of Key:value strings in the list of query parameters"""
+  queryParams: [String!]
+
+  """List of Key:value strings in the list of body parameters"""
+  bodyParams: [String!]
+
+  """
+  String containing request data that was not passed as a bodyParam or queryParam
+  """
+  reqText: String
+}
