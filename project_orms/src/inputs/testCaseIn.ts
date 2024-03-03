@@ -11,14 +11,14 @@ export class RequestDetailsInput{
     url:string;
     @Field(()=>GraphQLString,{nullable:true, description:'Sets method to use in the request e.g GET or POST'})
     requestType:string;
-    @Field(()=>GraphQLString,{description: 'Format of the request body e.g pplication/x-www-form-urlencoded, application/json etc'})
-    bodyType:string; //Form,JSON,XML,text
     @Field(()=>[GraphQLString], {nullable: true, description:'List of Key:value strings in the list of query parameters'})
     queryParams:Array<string>; // Array of key pairs
-    @Field(()=>[GraphQLString], {nullable: true,description:'List of Key:value strings in the list of body parameters'})
+    @Field(()=>[GraphQLString], {nullable: true, description:'List of Key:value strings in the list of body parameters'})
     bodyParams:Array<string>; // Array of key pairs
+    @Field(()=>[GraphQLString], {nullable: true, description:'List of Key:value strings in the list of header parameters'})
+    headerParams:Array<string>; // Array of key pairs
     @Field(()=>GraphQLString,{nullable: true, description:'String containing request data that was not passed as a bodyParam or queryParam'})
-    reqText:string; //In the event the request can't fit in the other types
+    reqText:string; // In the event the request can't fit in the other types
 }
 
 

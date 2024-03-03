@@ -40,6 +40,8 @@ const path = require('path');
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: 'schema.gql',
+      path: '/test-case',
+
     }),
   ],
   providers: [

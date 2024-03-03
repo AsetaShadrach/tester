@@ -107,7 +107,7 @@ export class TcRequestService{
 
             const reqConfigs:AxiosRequestConfig = {
                 headers:{
-                    'Content-Type': `${params.bodyType}`,
+                    'Content-Type': `${params.headerParams['Content-Type']}`,
                 },
                 method:params.requestType.toUpperCase(),
             }
@@ -145,7 +145,6 @@ export class TcRequestService{
     }
 
     async executeGetRequest(params:any, configs:runConfigs,){
-        console.log(params.bodyType)
         console.log(params.requestType)
         console.log(params.url)
         console.log(params.bodyParams)

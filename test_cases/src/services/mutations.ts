@@ -24,6 +24,10 @@ export class TestCaseMutationService {
               testCaseId:response?.id,
               retryIntervals:response?.retryIntervals,
               retryMaxAttempts:response?.retryMaxAttempts,
+              parentId:response?.parentId,
+              groupId:response?.groupId,
+              testType:response?.testType,
+              retryAfterSuccess:response?.retryAfterSuccess,
             },
             params.requestDetails
           );

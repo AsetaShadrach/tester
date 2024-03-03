@@ -7,9 +7,9 @@ type RequestDetailsObject {
   initiatedBy: String!
   url: String!
   requestType: String
-  bodyType: String
   queryParams: [String!]
   bodyParams: [String!]
+  headerParams: [String!]
   reqText: String
 }
 
@@ -187,7 +187,7 @@ input RequestDetailsFilter {
 type Mutation {
   createTestCase(params: TestCaseInput!): TestCaseMutateResponse!
   updateTestCase(testCaseId: String!, updateParams: TestCaseInput!): TestCase!
-  runTestCase(tCRunOptions: RequestDetailsInput, tCId: String, tCSaveOption: String = "run_only", retryIntervals: Float = 1, retryMaxAttempts: Float = 1): TestCaseMutateResponse!
+  runTestCase(tCRunOptions: RequestDetailsInput, tCId: String, tCSaveOption: String = "run_only", retryIntervals: Float = 1, retryMaxAttempts: Float = 1, parentId: String, groupId: String, testType: String, retryAfterSuccess: Boolean): TestCaseMutateResponse!
 }
 
 union TestCaseMutateResponse = TestCase | GenericTypeObject
@@ -251,16 +251,14 @@ input RequestDetailsInput {
   """Sets method to use in the request e.g GET or POST"""
   requestType: String
 
-  """
-  Format of the request body e.g pplication/x-www-form-urlencoded, application/json etc
-  """
-  bodyType: String!
-
   """List of Key:value strings in the list of query parameters"""
   queryParams: [String!]
 
   """List of Key:value strings in the list of body parameters"""
   bodyParams: [String!]
+
+  """List of Key:value strings in the list of header parameters"""
+  headerParams: [String!]
 
   """
   String containing request data that was not passed as a bodyParam or queryParam

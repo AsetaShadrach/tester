@@ -12,12 +12,12 @@ export class RequestDetailsObject{
     url:string;
     @Field({nullable:true})
     requestType:string;
-    @Field({nullable: true})
-    bodyType:string; //Form,JSON,XML,text
     @Field(()=>[GraphQLString], {nullable: true})
     queryParams:Array<string>; // Array of key pairs
     @Field(()=>[GraphQLString], {nullable: true})
     bodyParams:Array<string>; // Array of key pairs
+    @Field(()=>[GraphQLString], {nullable:true})
+    headerParams: Array<string>; // Array of key pairs
     @Field({nullable: true})
     reqText:string; //In the event the request can't fit in the other types
 }

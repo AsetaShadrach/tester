@@ -23,4 +23,8 @@ export interface runConfigs{
     testCaseId?: string,
     retryMaxAttempts?: number,
     retryIntervals?: number,
+    parentId:string,
+    groupId?:string,
+    testType?:string,
+    retryAfterSuccess?:boolean,
 }

@@ -34,6 +34,10 @@ export class TestCaseMutationsResolver {
     @Args('tCSaveOption',{nullable:true, defaultValue:"run_only"}) tCSaveOption?:string,
     @Args('retryIntervals',{nullable:true, defaultValue:1}) retryIntervals?:number,
     @Args('retryMaxAttempts',{nullable:true, defaultValue:1}) retryMaxAttempts?:number,
+    @Args('parentId',{nullable:true}) parentId?:string,
+    @Args('groupId',{nullable:true}) groupId?:string,
+    @Args('testType',{nullable:true}) testType?:string,
+    @Args('retryAfterSuccess', {nullable:true}) retryAfterSuccess?:boolean,
   ){
 
     return this.mutationService.runTestCase({
@@ -41,6 +45,10 @@ export class TestCaseMutationsResolver {
       testCaseId: tCId, 
       retryIntervals: retryIntervals, 
       retryMaxAttempts: retryMaxAttempts,
+      parentId:parentId,
+      groupId:groupId,
+      testType:testType,
+      retryAfterSuccess:retryAfterSuccess,
     },
     tCRunOptions)
   }
