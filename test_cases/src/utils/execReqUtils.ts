@@ -70,7 +70,7 @@ export class TcRequestService{
                 httpStatus: error.response.status || 500,
                 message: 'An error occured', 
                 response: error.response.statusText,
-                responseDescription: `An error occured on saving history for request ${runConfigs.parentId}`,
+                responseDescription: `An error occured on processing request ${runConfigs.parentId}`,
                 errors: responseArray
             }
 
@@ -117,7 +117,13 @@ export class TcRequestService{
             let form:any = {}
             for (let val of params.bodyParams){
                 const keyVal = val.split(':');
-                form[keyVal[0]] = keyVal[1];
+                if(!keyVal[2]){
+                    form[keyVal[0]] = keyVal[1];
+                }else if(keyVal[2]==='int'){
+                    form[keyVal[0]] = parseInt(keyVal[1]);
+                }else if(keyVal[2]==='float'){
+                    form[keyVal[0]] = parseFloat(keyVal[1]);
+                }
             }
 
             let headers:any = {}
@@ -126,27 +132,11 @@ export class TcRequestService{
                 headers[keyVal[0]] = keyVal[1];
             }
 
-            console.log("==========")
-            console.log("==========")
-            console.log("==========")
-            console.log("==========")
-            console.log("==========")
-            console.log("==========")
-            console.log(headers)
-
             const reqConfigs:AxiosRequestConfig = {
                 headers:headers,
                 method:params.requestType.toUpperCase(),
             }
             
-            console.log("==???????==")
-            console.log("???????====")
-            console.log("???????====")
-            console.log("???????====")
-            console.log("???????====")
-            console.log("???????====")
-            console.log(reqConfigs)
-
             const obsv = this.httpService.post(
                 params.url, querystring.stringify(form), reqConfigs
                 ).pipe(
@@ -162,12 +152,15 @@ export class TcRequestService{
             const response = await lastValueFrom(obsv)
             if(runConfigs.parentId){
                 await this.updateTestCaseHistory(
-                    runConfigs.parentId, params, requestedAt, [response]
+                    parentId, params, requestedAt, [response]
                 )
             }else{
                 const tC = await this.testCaseRepository.save(runConfigs);
                 parentId = tC.id;                
                 console.log(`Saved the run configuration for test case ${parentId}`)
+                await this.updateTestCaseHistory(
+                    parentId, params, requestedAt, [response]
+                )
             }
 
             return {

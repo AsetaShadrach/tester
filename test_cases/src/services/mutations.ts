@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RequestDetailsObject, TestCase } from 'project_orms/dist/entities/testCases';
-import { RequestDetailsInput, TestCaseInput, TestCaseUpdateInput } from 'project_orms/dist/inputs/testCaseIn';
+import { TestCaseInput, TestCaseUpdateInput } from 'project_orms/dist/inputs/testCaseIn';
 import { TcRequestService } from 'src/utils/execReqUtils';
  
 @Injectable()
