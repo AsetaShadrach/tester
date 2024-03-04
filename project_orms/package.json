@@ -1,6 +1,6 @@
 {
   "name": "project_orms",
-  "version": "0.1.40",
+  "version": "0.1.42",
   "description": "Contains all entities used in the project (TypeOrm specific)",
   "main": "dist/index.js",
   "author": "asetashadrach@gmail.com",

@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { RequestDetailsObject, TestCase } from 'project_orms/dist/entities/testCases';
 import { RequestDetailsInput, TestCaseInput, TestCaseUpdateInput } from 'project_orms/dist/inputs/testCaseIn';
 import { TcRequestService } from 'src/utils/execReqUtils';
-import { runConfigs } from 'src/dtos/interfaces';
  
 @Injectable()
 export class TestCaseMutationService {
@@ -18,19 +17,7 @@ export class TestCaseMutationService {
 
     if(params.runAndSave !== 'save_only'){
       
-        response = await this.runTestCase(
-            {
-              saveOption:response?.runAndSave,
-              testCaseId:response?.id,
-              retryIntervals:response?.retryIntervals,
-              retryMaxAttempts:response?.retryMaxAttempts,
-              parentId:response?.parentId,
-              groupId:response?.groupId,
-              testType:response?.testType,
-              retryAfterSuccess:response?.retryAfterSuccess,
-            },
-            params.requestDetails
-          );
+        response = await this.runTestCase(response);
     }
 
     return response
@@ -41,41 +28,41 @@ export class TestCaseMutationService {
     return tC;
   }
 
-  async runTestCase(runConfigs:runConfigs, reqParams?:RequestDetailsInput, ){
+  async runTestCase(runInputs:TestCaseInput){
     let response:any;
     let params:RequestDetailsObject;
     let tC: TestCase;
 
     // Enable running of already saved requests
     // Only use id to check TC details to run if reqParams are not provided
-    if(runConfigs.testCaseId && !reqParams){
-      tC = await this.testCaseRepository.findOneBy({id:runConfigs.testCaseId})
+    if(runInputs.parentId && !runInputs.requestDetails){
+      tC = await this.testCaseRepository.findOneBy({id:runInputs.parentId})
       if (tC){
           params = tC.requestDetails;
-          console.log(`Runnning pre-saved request ${runConfigs.testCaseId} with params  :: `, params);
+          console.log(`Runnning pre-saved request ${runInputs.parentId} with params  :: `, params);
       }
     }else{
-      params = reqParams;
+      params = runInputs.requestDetails;
     }
 
     if(!params){
       return {
         httpStatus:400,
         message: 'An error occured', 
-        response: `Test case params missing or TC ${runConfigs.testCaseId||'' } missing`,
+        response: `Test case params missing or TC ${runInputs.parentId||'' } missing`,
         responseDescription: `Test case params not found`,
         errors: [`Test case params returned ${params}`]
-    }
+      }
     }
     
     
-    if(params.requestType==='post' ){
-      response = await this.tcRequestService.executePostRequest(params,runConfigs)
-    }else if(params.requestType==='get' ){
-      response = await this.tcRequestService.executeGetRequest(params, runConfigs)
+    if(params.requestType==='POST' ){
+      response = await this.tcRequestService.executePostRequest(params,runInputs)
+    }else if(params.requestType==='GET' ){
+      response = await this.tcRequestService.executeGetRequest(params, runInputs)
     }
 
-    console.log(`Response from running test case ${runConfigs.testCaseId || ''} :: `, response )
+    console.log(`Response from running test case ${runInputs.parentId || ''} :: `, response )
 
     return response
   }

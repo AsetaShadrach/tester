@@ -77,7 +77,7 @@ export class TestCase{
     @Field({nullable:true})
     status:string;
 
-    @Column({type:'int', name:'retry_max_attempts', default:0})
+    @Column({type:'int', name:'retry_max_attempts', default:1})
     @Field(()=>Int)
     retryMaxAttempts:number;
 
@@ -121,9 +121,11 @@ export class GenericTypeObject{
     @Field(()=>GraphQLJSON, {nullable:true})
     response: JSON;
     @Field({nullable:true},)
-    responseDescription:string
+    responseDescription:string;
+    @Field(()=>GraphQLJSON,{nullable:true})
+    referenceIds:JSON;
     @Field(()=>[GraphQLJSON],{nullable:true})
-    errors:Array<JSON>
+    errors:Array<JSON>;
 }
 
 @ObjectType('FilterTestCasesResponse')

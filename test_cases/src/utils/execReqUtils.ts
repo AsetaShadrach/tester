@@ -7,6 +7,7 @@ import { lastValueFrom, map, repeat } from "rxjs";
 import { runConfigs } from "src/dtos/interfaces";
 import { Repository } from "typeorm";
 let querystring = require('querystring');
+
 @Injectable()
 export class TcRequestService{
     constructor(
@@ -56,7 +57,9 @@ export class TcRequestService{
 
     async processHttpErrorResponse(error:any, runConfigs:runConfigs, params?:any, requestedAt?:any){
         let responseArray:Array<string> = [];
-        let errorResponse:any; 
+        let errorResponse:any;
+        let parentId:any =  runConfigs.parentId;
+
         if(error.response){
             console.error(error.response.status, error.response.statusText, error.response.data)
                 
@@ -67,7 +70,7 @@ export class TcRequestService{
                 httpStatus: error.response.status || 500,
                 message: 'An error occured', 
                 response: error.response.statusText,
-                responseDescription: `An error occured on saving history for request ${runConfigs.testCaseId}`,
+                responseDescription: `An error occured on saving history for request ${runConfigs.parentId}`,
                 errors: responseArray
             }
 
@@ -78,26 +81,38 @@ export class TcRequestService{
                 httpStatus: 400,
                 message: 'An error occured', 
                 response: error.message,
-                responseDescription: `An error occured on processing request for ${runConfigs.testCaseId}`,
+                responseDescription: `An error occured on processing request for ${runConfigs.parentId}`,
                 errors: responseArray
             }
         }
 
-        if(runConfigs.testCaseId && 
-            runConfigs.saveOption && 
+        if( runConfigs.saveOption && 
             runConfigs.saveOption.includes('save')){
-                console.log("Saving history for request ", runConfigs.testCaseId)
+                console.log("Saving history for request ", runConfigs.parentId)
 
-                await this.updateTestCaseHistory(
-                    runConfigs.testCaseId, params, requestedAt, responseArray
-                )
+                if(runConfigs.parentId){
+                    await this.updateTestCaseHistory(
+                        runConfigs.parentId, params, requestedAt, responseArray
+                    )
+                }else{
+                    // If there is no parentId i.e TestCase is not tied to any chain of tests or is an individual test and is flagged to be saved
+                    const resp = await this.testCaseRepository.save(runConfigs)
+                    parentId = resp.id
+                }
             }
+
+        errorResponse.referenceIds = {
+            parentId: parentId,
+            groupId: runConfigs.groupId,
+        }
+
         return errorResponse;
 
     }
 
     async executePostRequest(params?:any, runConfigs?: runConfigs){
-        const requestedAt = new Date()
+        const requestedAt = new Date();
+        let parentId = runConfigs?.parentId;
         try {
             let form:any = {}
             for (let val of params.bodyParams){
@@ -105,14 +120,32 @@ export class TcRequestService{
                 form[keyVal[0]] = keyVal[1];
             }
 
-            const reqConfigs:AxiosRequestConfig = {
-                headers:{
-                    'Content-Type': `${params.headerParams['Content-Type']}`,
-                },
-                method:params.requestType.toUpperCase(),
+            let headers:any = {}
+            for (let val of params.headerParams){
+                const keyVal = val.split(':');
+                headers[keyVal[0]] = keyVal[1];
             }
 
-            console.log(runConfigs)
+            console.log("==========")
+            console.log("==========")
+            console.log("==========")
+            console.log("==========")
+            console.log("==========")
+            console.log("==========")
+            console.log(headers)
+
+            const reqConfigs:AxiosRequestConfig = {
+                headers:headers,
+                method:params.requestType.toUpperCase(),
+            }
+            
+            console.log("==???????==")
+            console.log("???????====")
+            console.log("???????====")
+            console.log("???????====")
+            console.log("???????====")
+            console.log("???????====")
+            console.log(reqConfigs)
 
             const obsv = this.httpService.post(
                 params.url, querystring.stringify(form), reqConfigs
@@ -127,15 +160,25 @@ export class TcRequestService{
                 ); 
             
             const response = await lastValueFrom(obsv)
-            await this.updateTestCaseHistory(
-                runConfigs.testCaseId, params, requestedAt, [response]
-            )
+            if(runConfigs.parentId){
+                await this.updateTestCaseHistory(
+                    runConfigs.parentId, params, requestedAt, [response]
+                )
+            }else{
+                const tC = await this.testCaseRepository.save(runConfigs);
+                parentId = tC.id;                
+                console.log(`Saved the run configuration for test case ${parentId}`)
+            }
 
             return {
                     httpStatus: 200,
                     message: 'Successfull post request', 
                     response: response,
-                    responseDescription: `An error occured on saving history for request ${runConfigs.testCaseId}`
+                    referenceIds: {
+                        parentId: parentId,
+                        groupId: runConfigs.groupId,
+                    },
+                    responseDescription: `Request ${runConfigs.parentId || ''} succesfully run`
                 }
         } catch (error) {
             console.log("Error processing post request ", error)

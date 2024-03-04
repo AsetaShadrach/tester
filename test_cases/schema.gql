@@ -57,6 +57,7 @@ type GenericTypeObject {
   message: String
   response: JSON
   responseDescription: String
+  referenceIds: JSON
   errors: [JSON!]
 }
 
@@ -187,7 +188,7 @@ input RequestDetailsFilter {
 type Mutation {
   createTestCase(params: TestCaseInput!): TestCaseMutateResponse!
   updateTestCase(testCaseId: String!, updateParams: TestCaseInput!): TestCase!
-  runTestCase(tCRunOptions: RequestDetailsInput, tCId: String, tCSaveOption: String = "run_only", retryIntervals: Float = 1, retryMaxAttempts: Float = 1, parentId: String, groupId: String, testType: String, retryAfterSuccess: Boolean): TestCaseMutateResponse!
+  runTestCase(tCRunInput: TestCaseInput): TestCaseMutateResponse!
 }
 
 union TestCaseMutateResponse = TestCase | GenericTypeObject
@@ -203,6 +204,11 @@ input TestCaseInput {
   description: String!
 
   """
+  ID of the initial request where you want to chain/add the response of the current request to
+  """
+  parentId: String
+
+  """
   Unique ID/name for test cases you want to group together. By passing name/ID here, you effectively bundle the test case together with all other test cases sharing that group ID
   """
   groupId: String
@@ -213,7 +219,7 @@ input TestCaseInput {
   """If not empty , all mentioned keys will be masked if test case is saved"""
   keysToMaskOnSave: [String!]
 
-  """Specifies what to do with the request whn run"""
+  """Specifies what to do with the request when executed"""
   runAndSave: String = "run_only"
 
   """

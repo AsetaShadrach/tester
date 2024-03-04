@@ -72,6 +72,10 @@ export class TestCaseInput{
     description:string;
 
     @Field(()=>GraphQLString,{ nullable:true, 
+        description: 'ID of the initial request where you want to chain/add the response of the current request to'})
+    parentId: string; // You can group tests
+
+    @Field(()=>GraphQLString,{ nullable:true, 
         description: 'Unique ID/name for test cases you want to group together. By passing name/ID here, '+
         'you effectively bundle the test case together with all other test cases sharing that group ID'})
     groupId: string; // You can group tests
@@ -86,7 +90,7 @@ export class TestCaseInput{
         name:'runAndSave',
         defaultValue: TestCaseRunOption.RUN_ONLY,
         nullable:true,
-        description: 'Specifies what to do with the request whn run'
+        description: 'Specifies what to do with the request when executed'
     }) 
     runAndSave:string;
 
