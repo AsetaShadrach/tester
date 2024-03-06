@@ -56,9 +56,9 @@ export class TestCaseMutationService {
     }
     
     
-    if(params.requestType==='POST' ){
+    if(params.requestType==='post' ){
       response = await this.tcRequestService.executePostRequest(params,runInputs)
-    }else if(params.requestType==='GET' ){
+    }else if(params.requestType==='get' ){
       response = await this.tcRequestService.executeGetRequest(params, runInputs)
     }
 

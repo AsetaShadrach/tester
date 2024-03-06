@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { AxiosRequestConfig } from "axios";
 import { TestCase } from "project_orms/dist/entities/testCases";
-import { lastValueFrom, map, repeat } from "rxjs";
+import { Observable, lastValueFrom, map, repeat, tap } from "rxjs";
 import { runConfigs } from "src/dtos/interfaces";
 import { Repository } from "typeorm";
 let querystring = require('querystring');
@@ -16,7 +16,7 @@ export class TcRequestService{
     ){}
 
     // uUpdate test case history after response
-    async updateTestCaseHistory(testCaseId : string, data:any, requestedAt:Date, responseArray:Array<string>){
+    async updateTestCaseHistory(testCaseId : string, data:any, requestedAt:Date, responseArray:Array<any>){
         const tC = await this.testCaseRepository.findOneBy({id:testCaseId});
 
         console.log(`Updating request history for ${testCaseId}`)
@@ -56,15 +56,13 @@ export class TcRequestService{
     };
 
     async processHttpErrorResponse(error:any, runConfigs:runConfigs, params?:any, requestedAt?:any){
-        let responseArray:Array<string> = [];
+        let responseArray:Array<any> = [];
         let errorResponse:any;
         let parentId:any =  runConfigs.parentId;
 
-        if(error.response){
-            console.error(error.response.status, error.response.statusText, error.response.data)
-                
-            responseArray.push(`status: ${error.response.status} , `+
-            `statusText : ${error.response.statusText}, data : ${error.response.data.error}`)
+        if(error.response){            
+            // Switched from array of strings to arrya of JSONs
+            responseArray.push(error.response.data[0] || {...error.response.data.error})
 
             errorResponse = {
                 httpStatus: error.response.status || 500,
@@ -107,7 +105,6 @@ export class TcRequestService{
         }
 
         return errorResponse;
-
     }
 
     async executePostRequest(params?:any, runConfigs?: runConfigs){
@@ -134,22 +131,58 @@ export class TcRequestService{
 
             const reqConfigs:AxiosRequestConfig = {
                 headers:headers,
-                method:params.requestType.toUpperCase(),
+                method:headers.method.toUpperCase(),
+            }
+
+            let dataToSend:any;
+
+            if(headers.method=='post' && headers['Content-Type'].includes('form')){
+                dataToSend = querystring.stringify(form)
+
+            }else if(headers.method=='post' && !headers['Content-Type'].includes('form')){
+                dataToSend = form
+            }
+
+            let obsv:Observable<any>;
+            if (headers.method=='post'){
+                obsv = this.httpService.post(
+                    params.url, dataToSend, reqConfigs
+                    ).pipe(
+                        repeat({
+                            count: runConfigs.retryMaxAttempts,
+                            delay: runConfigs.retryIntervals*1000
+                        }),                    
+                        map(async (response:any) =>{
+                            return response
+                        }),
+                    ); 
+            }
+
+            if(headers.method=='delete'){
+                obsv = this.httpService.delete(
+                    params.url, reqConfigs
+                    ).pipe(
+                        repeat({
+                            count: runConfigs.retryMaxAttempts,
+                            delay: runConfigs.retryIntervals*1000
+                        }),                    
+                        map(async (response:any) =>{
+                            return response
+                        }),
+                    )
             }
             
-            const obsv = this.httpService.post(
-                params.url, querystring.stringify(form), reqConfigs
-                ).pipe(
-                    repeat({
-                        count: runConfigs.retryMaxAttempts,
-                        delay: runConfigs.retryIntervals*1000
-                    }),                    
-                    map(async (response:any) =>{
-                        return response.data
-                    }),
-                ); 
-            
-            const response = await lastValueFrom(obsv)
+            const observableResponse = await lastValueFrom(obsv);
+
+            console.log("ObservableResponse =============================")
+            console.log(observableResponse);
+            console.log("================================================")
+            const response = { 
+                status: observableResponse.status,
+                statusText: observableResponse.statusText,
+                data: observableResponse.data
+            }
+
             if(runConfigs.parentId){
                 await this.updateTestCaseHistory(
                     parentId, params, requestedAt, [response]
@@ -164,9 +197,9 @@ export class TcRequestService{
             }
 
             return {
-                    httpStatus: 200,
-                    message: 'Successfull post request', 
-                    response: response,
+                    httpStatus: response.status,
+                    message: response.statusText, 
+                    response: response.data,
                     referenceIds: {
                         parentId: parentId,
                         groupId: runConfigs.groupId,

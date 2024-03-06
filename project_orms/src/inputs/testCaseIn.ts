@@ -9,7 +9,7 @@ export class RequestDetailsInput{
     initiatedBy:string; // In the case of groups the initiator might not be the one that created it
     @Field(()=>GraphQLString, {description:'URL to send the request to'})
     url:string;
-    @Field(()=>GraphQLString,{nullable:true, description:'Sets method to use in the request e.g GET or POST'})
+    @Field(()=>GraphQLString,{nullable:true, description:'Sets method to use in the request e.g get or post'})
     requestType:string;
     @Field(()=>[GraphQLString], {nullable: true, description:'List of Key:value strings in the list of query parameters'})
     queryParams:Array<string>; // Array of key pairs
@@ -36,7 +36,7 @@ export class RequestDetailsFilter{
     
     @Field(()=>GraphQLString,{
         nullable:true,
-        description:'filters for method used in the request e.g GET or POST'})
+        description:'filters for method used in the request e.g get or post'})
     requestType:string;
     
     @Field(()=>GraphQLString,{
