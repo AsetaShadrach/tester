@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@apollo/server": "^4.10.0",
+    "@babel/core": "^7.24.0",
     "@nestjs/apollo": "^12.1.0",
     "@nestjs/axios": "^3.0.2",
     "@nestjs/common": "^10.0.0",
