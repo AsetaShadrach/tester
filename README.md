@@ -34,3 +34,5 @@ async createMany(users: User[]) {
 8. Convert all enums to small letters
 9. Confirm foreign key filtering for singletons
 10. Add is email verified or is active to tenats/users
+11. Confirm streaming response from file reads
+12. Fix get request option to factor in query param string

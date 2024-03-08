@@ -56,10 +56,12 @@ export class TestCaseMutationService {
     }
     
     
-    if(params.requestType==='post' ){
+    if(['post','patch','put'].includes(params.requestType)){
       response = await this.tcRequestService.executePostRequest(params,runInputs)
     }else if(params.requestType==='get' ){
       response = await this.tcRequestService.executeGetRequest(params, runInputs)
+    }else if(params.requestType==='delete' ){
+      response = await this.tcRequestService.executeDeleteRequest(params, runInputs)
     }
 
     console.log(`Response from running test case ${runInputs.parentId || ''} :: `, response )

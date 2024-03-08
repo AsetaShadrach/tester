@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { AxiosRequestConfig } from "axios";
 import { TestCase } from "project_orms/dist/entities/testCases";
-import { Observable, lastValueFrom, map, repeat, tap } from "rxjs";
+import { Observable, lastValueFrom, map, repeat } from "rxjs";
 import { runConfigs } from "src/dtos/interfaces";
 import { Repository } from "typeorm";
 let querystring = require('querystring');
@@ -136,10 +136,28 @@ export class TcRequestService{
 
             let dataToSend:any;
 
-            if(headers.method=='post' && headers['Content-Type'].includes('form')){
+            if(['post','put'].includes(headers.method) && !headers['Content-Type']){
+                let errors:Array<any> = []
+                if(!headers['Content-Type']){
+                    errors.push('Missing header param : Content-Type')
+                }
+
+                return {
+                    httpStatus: 400,
+                    message: "An error occured", 
+                    response: 'Invalid header params or not all header params present',
+                    referenceIds: {
+                        parentId: parentId,
+                        groupId: runConfigs.groupId,
+                    },
+                    responseDescription: `Request ${runConfigs.parentId || ''} failed`,
+                    errors:errors
+                }
+            }
+            if(headers['Content-Type'].includes('form')){
                 dataToSend = querystring.stringify(form)
 
-            }else if(headers.method=='post' && !headers['Content-Type'].includes('form')){
+            }else if(!headers['Content-Type'].includes('form')){
                 dataToSend = form
             }
 
@@ -158,9 +176,9 @@ export class TcRequestService{
                     ); 
             }
 
-            if(headers.method=='delete'){
-                obsv = this.httpService.delete(
-                    params.url, reqConfigs
+            if (headers.method=='put'){
+                obsv = this.httpService.put(
+                    params.url, dataToSend, reqConfigs
                     ).pipe(
                         repeat({
                             count: runConfigs.retryMaxAttempts,
@@ -169,8 +187,24 @@ export class TcRequestService{
                         map(async (response:any) =>{
                             return response
                         }),
-                    )
+                    ); 
             }
+
+            if (headers.method=='patch'){
+                obsv = this.httpService.patch(
+                    params.url, dataToSend, reqConfigs
+                    ).pipe(
+                        repeat({
+                            count: runConfigs.retryMaxAttempts,
+                            delay: runConfigs.retryIntervals*1000
+                        }),                    
+                        map(async (response:any) =>{
+                            return response
+                        }),
+                    ); 
+            }
+
+            
             
             const observableResponse = await lastValueFrom(obsv);
 
@@ -213,10 +247,150 @@ export class TcRequestService{
         }
     }
 
-    async executeGetRequest(params:any, configs:runConfigs,){
+    async executeGetRequest(params:any, runConfigs:runConfigs,){
         console.log(params.requestType)
         console.log(params.url)
-        console.log(params.bodyParams)
         console.log(params.queryParams)
+
+        const requestedAt = new Date();
+        let parentId = runConfigs?.parentId;
+        try {
+            let headers:any = {}
+            for (let val of params.headerParams){
+                const keyVal = val.split(':');
+                headers[keyVal[0]] = keyVal[1];
+            }
+
+            const reqConfigs:AxiosRequestConfig = {
+                headers:headers,
+                method:headers.method.toUpperCase(),
+            }
+
+            let obsv:Observable<any>;
+           
+            obsv = this.httpService.get(
+                params.url, reqConfigs
+                ).pipe(
+                    repeat({
+                        count: runConfigs.retryMaxAttempts,
+                        delay: runConfigs.retryIntervals*1000
+                    }),                    
+                    map(async (response:any) =>{
+                        return response
+                    }),
+                )
+            
+            
+            const observableResponse = await lastValueFrom(obsv);
+
+            console.log("ObservableResponse =============================")
+            console.log(observableResponse);
+            console.log("================================================")
+            const response = { 
+                status: observableResponse.status,
+                statusText: observableResponse.statusText,
+                data: observableResponse.data
+            }
+
+            if(runConfigs.parentId){
+                await this.updateTestCaseHistory(
+                    parentId, params, requestedAt, [response]
+                )
+            }else{
+                const tC = await this.testCaseRepository.save(runConfigs);
+                parentId = tC.id;                
+                console.log(`Saved the run configuration for test case ${parentId}`)
+                await this.updateTestCaseHistory(
+                    parentId, params, requestedAt, [response]
+                )
+            }
+
+            return {
+                    httpStatus: response.status,
+                    message: response.statusText, 
+                    response: response.data,
+                    referenceIds: {
+                        parentId: parentId,
+                        groupId: runConfigs.groupId,
+                    },
+                    responseDescription: `Request ${runConfigs.parentId || ''} succesfully run`
+                }
+        } catch (error) {
+            console.log("Error processing post request ", error)
+            const response = await this.processHttpErrorResponse(error, runConfigs, params, requestedAt)            
+            return response;
+        }
+    }
+
+
+    async executeDeleteRequest(params?:any, runConfigs?: runConfigs){
+        const requestedAt = new Date();
+        let parentId = runConfigs?.parentId;
+        try {
+            let headers:any = {}
+            for (let val of params.headerParams){
+                const keyVal = val.split(':');
+                headers[keyVal[0]] = keyVal[1];
+            }
+
+            const reqConfigs:AxiosRequestConfig = {
+                headers:headers,
+                method:headers.method.toUpperCase(),
+            }
+
+
+            let obsv:Observable<any>;
+            obsv = this.httpService.delete(
+                params.url, reqConfigs
+                ).pipe(
+                    repeat({
+                        count: runConfigs.retryMaxAttempts,
+                        delay: runConfigs.retryIntervals*1000
+                    }),                    
+                    map(async (response:any) =>{
+                        return response
+                    }),
+                )
+            
+            
+            const observableResponse = await lastValueFrom(obsv);
+
+            console.log("ObservableResponse =============================")
+            console.log(observableResponse);
+            console.log("================================================")
+            const response = { 
+                status: observableResponse.status,
+                statusText: observableResponse.statusText,
+                data: observableResponse.data
+            }
+
+            if(runConfigs.parentId){
+                await this.updateTestCaseHistory(
+                    parentId, params, requestedAt, [response]
+                )
+            }else{
+                const tC = await this.testCaseRepository.save(runConfigs);
+                parentId = tC.id;                
+                console.log(`Saved the run configuration for test case ${parentId}`)
+                await this.updateTestCaseHistory(
+                    parentId, params, requestedAt, [response]
+                )
+            }
+
+            return {
+                    httpStatus: response.status,
+                    message: response.statusText, 
+                    response: response.data,
+                    referenceIds: {
+                        parentId: parentId,
+                        groupId: runConfigs.groupId,
+                    },
+                    responseDescription: `Request ${runConfigs.parentId || ''} succesfully run`
+                }
+        } catch (error) {
+            console.log("Error processing post request ", error)
+            const response = await this.processHttpErrorResponse(error, runConfigs, params, requestedAt)            
+            return response;
+        }
     }
 }
