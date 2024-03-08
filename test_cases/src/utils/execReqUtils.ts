@@ -1,396 +1,399 @@
-import { HttpService } from "@nestjs/axios";
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { AxiosRequestConfig } from "axios";
-import { TestCase } from "project_orms/dist/entities/testCases";
-import { Observable, lastValueFrom, map, repeat } from "rxjs";
-import { runConfigs } from "src/dtos/interfaces";
-import { Repository } from "typeorm";
-let querystring = require('querystring');
+import { HttpService } from '@nestjs/axios';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { AxiosRequestConfig } from 'axios';
+import { TestCase } from 'project_orms/dist/entities/testCases';
+import { Observable, lastValueFrom, map, repeat } from 'rxjs';
+import { runConfigs } from 'src/dtos/interfaces';
+import { Repository } from 'typeorm';
+import querystring from 'querystring';
 
 @Injectable()
-export class TcRequestService{
-    constructor(
-        private readonly httpService:HttpService,
-        @InjectRepository(TestCase) private readonly testCaseRepository:Repository<TestCase>,
-    ){}
+export class TcRequestService {
+  constructor(
+    private readonly httpService: HttpService,
+    @InjectRepository(TestCase)
+    private readonly testCaseRepository: Repository<TestCase>,
+  ) {}
 
-    // uUpdate test case history after response
-    async updateTestCaseHistory(testCaseId : string, data:any, requestedAt:Date, responseArray:Array<any>){
-        const tC = await this.testCaseRepository.findOneBy({id:testCaseId});
+  // uUpdate test case history after response
+  async updateTestCaseHistory(
+    testCaseId: string,
+    data: any,
+    requestedAt: Date,
+    responseArray: Array<any>,
+  ) {
+    const tC = await this.testCaseRepository.findOneBy({ id: testCaseId });
 
-        console.log(`Updating request history for ${testCaseId}`)
+    console.log(`Updating request history for ${testCaseId}`);
 
-        if(tC.requestHistory){
-            tC.requestHistory.push(
-                {
-                    request : data,
-                    requestedAt : requestedAt.toISOString(),
-                    respondedAt : new Date().toISOString(),
-                    response : responseArray
-                }
-            )
-            await this.testCaseRepository.save(tC)
-        }else{
+    if (tC.requestHistory) {
+      tC.requestHistory.push({
+        request: data,
+        requestedAt: requestedAt.toISOString(),
+        respondedAt: new Date().toISOString(),
+        response: responseArray,
+      });
+      await this.testCaseRepository.save(tC);
+    } else {
+      tC.requestHistory = [
+        {
+          request: data,
+          requestedAt: requestedAt.toISOString(),
+          respondedAt: new Date().toISOString(),
+          response: responseArray,
+        },
+      ];
+      await this.testCaseRepository.save(tC);
+    }
+  }
 
-            tC.requestHistory = [{
-                    request : data,
-                    requestedAt : requestedAt.toISOString(),
-                    respondedAt : new Date().toISOString(),
-                    response : responseArray
-                }]
-            await this.testCaseRepository.save(tC)
-        }
+  async processHttpErrorResponse(
+    error: any,
+    runConfigs: runConfigs,
+    params?: any,
+    requestedAt?: any,
+  ) {
+    const responseArray: Array<any> = [];
+    let errorResponse: any;
+    let parentId: any = runConfigs.parentId;
+
+    if (error.response) {
+      // Switched from array of strings to arrya of JSONs
+      responseArray.push(
+        error.response.data[0] || { ...error.response.data.error },
+      );
+
+      errorResponse = {
+        httpStatus: error.response.status || 500,
+        message: 'An error occured',
+        response: error.response.statusText,
+        responseDescription: `An error occured on processing request ${runConfigs.parentId}`,
+        errors: responseArray,
+      };
+    } else if (error.stack) {
+      responseArray.push(error.stack);
+
+      errorResponse = {
+        httpStatus: 400,
+        message: 'An error occured',
+        response: error.message,
+        responseDescription: `An error occured on processing request for ${runConfigs.parentId}`,
+        errors: responseArray,
+      };
     }
 
-    async convertReqDetailsToFormInput(reqDetailsArray:Array<string>){
-        
+    if (runConfigs.saveOption && runConfigs.saveOption.includes('save')) {
+      console.log('Saving history for request ', runConfigs.parentId);
+
+      if (runConfigs.parentId) {
+        await this.updateTestCaseHistory(
+          runConfigs.parentId,
+          params,
+          requestedAt,
+          responseArray,
+        );
+      } else {
+        // If there is no parentId i.e TestCase is not tied to any chain of tests or is an individual test and is flagged to be saved
+        const resp = await this.testCaseRepository.save(runConfigs);
+        parentId = resp.id;
+      }
+    }
+
+    errorResponse.referenceIds = {
+      parentId: parentId,
+      groupId: runConfigs.groupId,
     };
 
-    async convertReqDetailsToJsonInput(reqDetailsArray:Array<string>){
-        
-    };
+    return errorResponse;
+  }
 
-    async convertReqDetailsToXMLInput(reqDetailsArray:Array<string>){
-        
-    };
+  async executePostRequest(params?: any, runConfigs?: runConfigs) {
+    const requestedAt = new Date();
+    let parentId = runConfigs?.parentId;
+    try {
+      const form: any = {};
+      for (const val of params.bodyParams) {
+        const keyVal = val.split(':');
+        if (!keyVal[2]) {
+          form[keyVal[0]] = keyVal[1];
+        } else if (keyVal[2] === 'int') {
+          form[keyVal[0]] = parseInt(keyVal[1]);
+        } else if (keyVal[2] === 'float') {
+          form[keyVal[0]] = parseFloat(keyVal[1]);
+        }
+      }
 
-    async processHttpErrorResponse(error:any, runConfigs:runConfigs, params?:any, requestedAt?:any){
-        let responseArray:Array<any> = [];
-        let errorResponse:any;
-        let parentId:any =  runConfigs.parentId;
+      const headers: any = {};
+      for (const val of params.headerParams) {
+        const keyVal = val.split(':');
+        headers[keyVal[0]] = keyVal[1];
+      }
 
-        if(error.response){            
-            // Switched from array of strings to arrya of JSONs
-            responseArray.push(error.response.data[0] || {...error.response.data.error})
+      const reqConfigs: AxiosRequestConfig = {
+        headers: headers,
+        method: headers.method.toUpperCase(),
+      };
 
-            errorResponse = {
-                httpStatus: error.response.status || 500,
-                message: 'An error occured', 
-                response: error.response.statusText,
-                responseDescription: `An error occured on processing request ${runConfigs.parentId}`,
-                errors: responseArray
-            }
+      let dataToSend: any;
 
-        }else if(error.stack){
-            responseArray.push(error.stack)
-
-            errorResponse = {
-                httpStatus: 400,
-                message: 'An error occured', 
-                response: error.message,
-                responseDescription: `An error occured on processing request for ${runConfigs.parentId}`,
-                errors: responseArray
-            }
+      if (
+        ['post', 'put'].includes(headers.method) &&
+        !headers['Content-Type']
+      ) {
+        const errors: Array<any> = [];
+        if (!headers['Content-Type']) {
+          errors.push('Missing header param : Content-Type');
         }
 
-        if( runConfigs.saveOption && 
-            runConfigs.saveOption.includes('save')){
-                console.log("Saving history for request ", runConfigs.parentId)
-
-                if(runConfigs.parentId){
-                    await this.updateTestCaseHistory(
-                        runConfigs.parentId, params, requestedAt, responseArray
-                    )
-                }else{
-                    // If there is no parentId i.e TestCase is not tied to any chain of tests or is an individual test and is flagged to be saved
-                    const resp = await this.testCaseRepository.save(runConfigs)
-                    parentId = resp.id
-                }
-            }
-
-        errorResponse.referenceIds = {
+        return {
+          httpStatus: 400,
+          message: 'An error occured',
+          response: 'Invalid header params or not all header params present',
+          referenceIds: {
             parentId: parentId,
             groupId: runConfigs.groupId,
-        }
+          },
+          responseDescription: `Request ${runConfigs.parentId || ''} failed`,
+          errors: errors,
+        };
+      }
+      if (headers['Content-Type'].includes('form')) {
+        dataToSend = querystring.stringify(form);
+      } else if (!headers['Content-Type'].includes('form')) {
+        dataToSend = form;
+      }
 
-        return errorResponse;
-    }
-
-    async executePostRequest(params?:any, runConfigs?: runConfigs){
-        const requestedAt = new Date();
-        let parentId = runConfigs?.parentId;
-        try {
-            let form:any = {}
-            for (let val of params.bodyParams){
-                const keyVal = val.split(':');
-                if(!keyVal[2]){
-                    form[keyVal[0]] = keyVal[1];
-                }else if(keyVal[2]==='int'){
-                    form[keyVal[0]] = parseInt(keyVal[1]);
-                }else if(keyVal[2]==='float'){
-                    form[keyVal[0]] = parseFloat(keyVal[1]);
-                }
-            }
-
-            let headers:any = {}
-            for (let val of params.headerParams){
-                const keyVal = val.split(':');
-                headers[keyVal[0]] = keyVal[1];
-            }
-
-            const reqConfigs:AxiosRequestConfig = {
-                headers:headers,
-                method:headers.method.toUpperCase(),
-            }
-
-            let dataToSend:any;
-
-            if(['post','put'].includes(headers.method) && !headers['Content-Type']){
-                let errors:Array<any> = []
-                if(!headers['Content-Type']){
-                    errors.push('Missing header param : Content-Type')
-                }
-
-                return {
-                    httpStatus: 400,
-                    message: "An error occured", 
-                    response: 'Invalid header params or not all header params present',
-                    referenceIds: {
-                        parentId: parentId,
-                        groupId: runConfigs.groupId,
-                    },
-                    responseDescription: `Request ${runConfigs.parentId || ''} failed`,
-                    errors:errors
-                }
-            }
-            if(headers['Content-Type'].includes('form')){
-                dataToSend = querystring.stringify(form)
-
-            }else if(!headers['Content-Type'].includes('form')){
-                dataToSend = form
-            }
-
-            let obsv:Observable<any>;
-            if (headers.method=='post'){
-                obsv = this.httpService.post(
-                    params.url, dataToSend, reqConfigs
-                    ).pipe(
-                        repeat({
-                            count: runConfigs.retryMaxAttempts,
-                            delay: runConfigs.retryIntervals*1000
-                        }),                    
-                        map(async (response:any) =>{
-                            return response
-                        }),
-                    ); 
-            }
-
-            if (headers.method=='put'){
-                obsv = this.httpService.put(
-                    params.url, dataToSend, reqConfigs
-                    ).pipe(
-                        repeat({
-                            count: runConfigs.retryMaxAttempts,
-                            delay: runConfigs.retryIntervals*1000
-                        }),                    
-                        map(async (response:any) =>{
-                            return response
-                        }),
-                    ); 
-            }
-
-            if (headers.method=='patch'){
-                obsv = this.httpService.patch(
-                    params.url, dataToSend, reqConfigs
-                    ).pipe(
-                        repeat({
-                            count: runConfigs.retryMaxAttempts,
-                            delay: runConfigs.retryIntervals*1000
-                        }),                    
-                        map(async (response:any) =>{
-                            return response
-                        }),
-                    ); 
-            }
-
-            
-            
-            const observableResponse = await lastValueFrom(obsv);
-
-            console.log("ObservableResponse =============================")
-            console.log(observableResponse);
-            console.log("================================================")
-            const response = { 
-                status: observableResponse.status,
-                statusText: observableResponse.statusText,
-                data: observableResponse.data
-            }
-
-            if(runConfigs.parentId){
-                await this.updateTestCaseHistory(
-                    parentId, params, requestedAt, [response]
-                )
-            }else{
-                const tC = await this.testCaseRepository.save(runConfigs);
-                parentId = tC.id;                
-                console.log(`Saved the run configuration for test case ${parentId}`)
-                await this.updateTestCaseHistory(
-                    parentId, params, requestedAt, [response]
-                )
-            }
-
-            return {
-                    httpStatus: response.status,
-                    message: response.statusText, 
-                    response: response.data,
-                    referenceIds: {
-                        parentId: parentId,
-                        groupId: runConfigs.groupId,
-                    },
-                    responseDescription: `Request ${runConfigs.parentId || ''} succesfully run`
-                }
-        } catch (error) {
-            console.log("Error processing post request ", error)
-            const response = await this.processHttpErrorResponse(error, runConfigs, params, requestedAt)            
+      let obsv: Observable<any>;
+      if (headers.method == 'post') {
+        obsv = this.httpService.post(params.url, dataToSend, reqConfigs).pipe(
+          repeat({
+            count: runConfigs.retryMaxAttempts,
+            delay: runConfigs.retryIntervals * 1000,
+          }),
+          map(async (response: any) => {
             return response;
-        }
-    }
+          }),
+        );
+      }
 
-    async executeGetRequest(params:any, runConfigs:runConfigs,){
-        console.log(params.requestType)
-        console.log(params.url)
-        console.log(params.queryParams)
-
-        const requestedAt = new Date();
-        let parentId = runConfigs?.parentId;
-        try {
-            let headers:any = {}
-            for (let val of params.headerParams){
-                const keyVal = val.split(':');
-                headers[keyVal[0]] = keyVal[1];
-            }
-
-            const reqConfigs:AxiosRequestConfig = {
-                headers:headers,
-                method:headers.method.toUpperCase(),
-            }
-
-            let obsv:Observable<any>;
-           
-            obsv = this.httpService.get(
-                params.url, reqConfigs
-                ).pipe(
-                    repeat({
-                        count: runConfigs.retryMaxAttempts,
-                        delay: runConfigs.retryIntervals*1000
-                    }),                    
-                    map(async (response:any) =>{
-                        return response
-                    }),
-                )
-            
-            
-            const observableResponse = await lastValueFrom(obsv);
-
-            console.log("ObservableResponse =============================")
-            console.log(observableResponse);
-            console.log("================================================")
-            const response = { 
-                status: observableResponse.status,
-                statusText: observableResponse.statusText,
-                data: observableResponse.data
-            }
-
-            if(runConfigs.parentId){
-                await this.updateTestCaseHistory(
-                    parentId, params, requestedAt, [response]
-                )
-            }else{
-                const tC = await this.testCaseRepository.save(runConfigs);
-                parentId = tC.id;                
-                console.log(`Saved the run configuration for test case ${parentId}`)
-                await this.updateTestCaseHistory(
-                    parentId, params, requestedAt, [response]
-                )
-            }
-
-            return {
-                    httpStatus: response.status,
-                    message: response.statusText, 
-                    response: response.data,
-                    referenceIds: {
-                        parentId: parentId,
-                        groupId: runConfigs.groupId,
-                    },
-                    responseDescription: `Request ${runConfigs.parentId || ''} succesfully run`
-                }
-        } catch (error) {
-            console.log("Error processing post request ", error)
-            const response = await this.processHttpErrorResponse(error, runConfigs, params, requestedAt)            
+      if (headers.method == 'put') {
+        obsv = this.httpService.put(params.url, dataToSend, reqConfigs).pipe(
+          repeat({
+            count: runConfigs.retryMaxAttempts,
+            delay: runConfigs.retryIntervals * 1000,
+          }),
+          map(async (response: any) => {
             return response;
-        }
-    }
+          }),
+        );
+      }
 
-
-    async executeDeleteRequest(params?:any, runConfigs?: runConfigs){
-        const requestedAt = new Date();
-        let parentId = runConfigs?.parentId;
-        try {
-            let headers:any = {}
-            for (let val of params.headerParams){
-                const keyVal = val.split(':');
-                headers[keyVal[0]] = keyVal[1];
-            }
-
-            const reqConfigs:AxiosRequestConfig = {
-                headers:headers,
-                method:headers.method.toUpperCase(),
-            }
-
-
-            let obsv:Observable<any>;
-            obsv = this.httpService.delete(
-                params.url, reqConfigs
-                ).pipe(
-                    repeat({
-                        count: runConfigs.retryMaxAttempts,
-                        delay: runConfigs.retryIntervals*1000
-                    }),                    
-                    map(async (response:any) =>{
-                        return response
-                    }),
-                )
-            
-            
-            const observableResponse = await lastValueFrom(obsv);
-
-            console.log("ObservableResponse =============================")
-            console.log(observableResponse);
-            console.log("================================================")
-            const response = { 
-                status: observableResponse.status,
-                statusText: observableResponse.statusText,
-                data: observableResponse.data
-            }
-
-            if(runConfigs.parentId){
-                await this.updateTestCaseHistory(
-                    parentId, params, requestedAt, [response]
-                )
-            }else{
-                const tC = await this.testCaseRepository.save(runConfigs);
-                parentId = tC.id;                
-                console.log(`Saved the run configuration for test case ${parentId}`)
-                await this.updateTestCaseHistory(
-                    parentId, params, requestedAt, [response]
-                )
-            }
-
-            return {
-                    httpStatus: response.status,
-                    message: response.statusText, 
-                    response: response.data,
-                    referenceIds: {
-                        parentId: parentId,
-                        groupId: runConfigs.groupId,
-                    },
-                    responseDescription: `Request ${runConfigs.parentId || ''} succesfully run`
-                }
-        } catch (error) {
-            console.log("Error processing post request ", error)
-            const response = await this.processHttpErrorResponse(error, runConfigs, params, requestedAt)            
+      if (headers.method == 'patch') {
+        obsv = this.httpService.patch(params.url, dataToSend, reqConfigs).pipe(
+          repeat({
+            count: runConfigs.retryMaxAttempts,
+            delay: runConfigs.retryIntervals * 1000,
+          }),
+          map(async (response: any) => {
             return response;
-        }
+          }),
+        );
+      }
+
+      const observableResponse = await lastValueFrom(obsv);
+
+      console.log('ObservableResponse =============================');
+      console.log(observableResponse);
+      console.log('================================================');
+      const response = {
+        status: observableResponse.status,
+        statusText: observableResponse.statusText,
+        data: observableResponse.data,
+      };
+
+      if (runConfigs.parentId) {
+        await this.updateTestCaseHistory(parentId, params, requestedAt, [
+          response,
+        ]);
+      } else {
+        const tC = await this.testCaseRepository.save(runConfigs);
+        parentId = tC.id;
+        console.log(`Saved the run configuration for test case ${parentId}`);
+        await this.updateTestCaseHistory(parentId, params, requestedAt, [
+          response,
+        ]);
+      }
+
+      return {
+        httpStatus: response.status,
+        message: response.statusText,
+        response: response.data,
+        referenceIds: {
+          parentId: parentId,
+          groupId: runConfigs.groupId,
+        },
+        responseDescription: `Request ${runConfigs.parentId || ''} succesfully run`,
+      };
+    } catch (error) {
+      console.log('Error processing post request ', error);
+      const response = await this.processHttpErrorResponse(
+        error,
+        runConfigs,
+        params,
+        requestedAt,
+      );
+      return response;
     }
+  }
+
+  async executeGetRequest(params: any, runConfigs: runConfigs) {
+    console.log(params.requestType);
+    console.log(params.url);
+    console.log(params.queryParams);
+
+    const requestedAt = new Date();
+    let parentId = runConfigs?.parentId;
+    try {
+      const headers: any = {};
+      for (const val of params.headerParams) {
+        const keyVal = val.split(':');
+        headers[keyVal[0]] = keyVal[1];
+      }
+
+      const reqConfigs: AxiosRequestConfig = {
+        headers: headers,
+        method: headers.method.toUpperCase(),
+      };
+
+      const obsv: Observable<any> = this.httpService
+        .get(params.url, reqConfigs)
+        .pipe(
+          repeat({
+            count: runConfigs.retryMaxAttempts,
+            delay: runConfigs.retryIntervals * 1000,
+          }),
+          map(async (response: any) => {
+            return response;
+          }),
+        );
+
+      const observableResponse = await lastValueFrom(obsv);
+
+      console.log('ObservableResponse =============================');
+      console.log(observableResponse);
+      console.log('================================================');
+      const response = {
+        status: observableResponse.status,
+        statusText: observableResponse.statusText,
+        data: observableResponse.data,
+      };
+
+      if (runConfigs.parentId) {
+        await this.updateTestCaseHistory(parentId, params, requestedAt, [
+          response,
+        ]);
+      } else {
+        const tC = await this.testCaseRepository.save(runConfigs);
+        parentId = tC.id;
+        console.log(`Saved the run configuration for test case ${parentId}`);
+        await this.updateTestCaseHistory(parentId, params, requestedAt, [
+          response,
+        ]);
+      }
+
+      return {
+        httpStatus: response.status,
+        message: response.statusText,
+        response: response.data,
+        referenceIds: {
+          parentId: parentId,
+          groupId: runConfigs.groupId,
+        },
+        responseDescription: `Request ${runConfigs.parentId || ''} succesfully run`,
+      };
+    } catch (error) {
+      console.log('Error processing post request ', error);
+      const response = await this.processHttpErrorResponse(
+        error,
+        runConfigs,
+        params,
+        requestedAt,
+      );
+      return response;
+    }
+  }
+
+  async executeDeleteRequest(params?: any, runConfigs?: runConfigs) {
+    const requestedAt = new Date();
+    let parentId = runConfigs?.parentId;
+    try {
+      const headers: any = {};
+      for (const val of params.headerParams) {
+        const keyVal = val.split(':');
+        headers[keyVal[0]] = keyVal[1];
+      }
+
+      const reqConfigs: AxiosRequestConfig = {
+        headers: headers,
+        method: headers.method.toUpperCase(),
+      };
+
+      const obsv: Observable<any> = this.httpService
+        .delete(params.url, reqConfigs)
+        .pipe(
+          repeat({
+            count: runConfigs.retryMaxAttempts,
+            delay: runConfigs.retryIntervals * 1000,
+          }),
+          map(async (response: any) => {
+            return response;
+          }),
+        );
+
+      const observableResponse = await lastValueFrom(obsv);
+
+      console.log('ObservableResponse =============================');
+      console.log(observableResponse);
+      console.log('================================================');
+      const response = {
+        status: observableResponse.status,
+        statusText: observableResponse.statusText,
+        data: observableResponse.data,
+      };
+
+      if (runConfigs.parentId) {
+        await this.updateTestCaseHistory(parentId, params, requestedAt, [
+          response,
+        ]);
+      } else {
+        const tC = await this.testCaseRepository.save(runConfigs);
+        parentId = tC.id;
+        console.log(`Saved the run configuration for test case ${parentId}`);
+        await this.updateTestCaseHistory(parentId, params, requestedAt, [
+          response,
+        ]);
+      }
+
+      return {
+        httpStatus: response.status,
+        message: response.statusText,
+        response: response.data,
+        referenceIds: {
+          parentId: parentId,
+          groupId: runConfigs.groupId,
+        },
+        responseDescription: `Request ${runConfigs.parentId || ''} succesfully run`,
+      };
+    } catch (error) {
+      console.log('Error processing post request ', error);
+      const response = await this.processHttpErrorResponse(
+        error,
+        runConfigs,
+        params,
+        requestedAt,
+      );
+      return response;
+    }
+  }
 }

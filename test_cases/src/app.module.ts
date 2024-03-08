@@ -10,16 +10,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TestCase } from 'project_orms/dist/entities/testCases';
 import { TcRequestService } from './utils/execReqUtils';
 import { HttpModule } from '@nestjs/axios';
-
-const path = require('path');
+import * as path from 'path';
 
 @Module({
-  imports: [    
+  imports: [
     HttpModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    
+
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -30,7 +29,12 @@ const path = require('path');
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DATABASE'),
-        entities: [path.join(__dirname, '../node_modules/project_orms/dist/entities/testCases{.ts,.js}')],
+        entities: [
+          path.join(
+            __dirname,
+            '../node_modules/project_orms/dist/entities/testCases{.ts,.js}',
+          ),
+        ],
         synchronize: true,
       }),
     }),
@@ -41,15 +45,17 @@ const path = require('path');
       driver: ApolloDriver,
       autoSchemaFile: 'schema.gql',
       path: '/test-case',
-
     }),
   ],
   providers: [
     // Services
-    TestCaseMutationService, TestCaseQueryService, TcRequestService,
-    
-    // Resolvers
-    TestCaseMutationsResolver, TestCaseQueryResolver],
-})
+    TestCaseMutationService,
+    TestCaseQueryService,
+    TcRequestService,
 
+    // Resolvers
+    TestCaseMutationsResolver,
+    TestCaseQueryResolver,
+  ],
+})
 export class AppModule {}

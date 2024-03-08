@@ -5,20 +5,16 @@ import { TestCaseQueryService } from 'src/services/queries';
 
 @Resolver()
 export class TestCaseQueryResolver {
-  constructor(
-    private readonly queryService: TestCaseQueryService,
-  ) {}
+  constructor(private readonly queryService: TestCaseQueryService) {}
 
-  @Query(()=>String)
-  getHello(){
+  @Query(() => String)
+  getHello() {
     return 'TestCaseQueryService is up';
   }
 
-  @Query(()=>TestCaseQueryResponse)
-  async filterTestCases(
-    @Args('filterParams') params:FilterTestCasesParams,
-  ){
-    console.log("Gets to the filter")
+  @Query(() => TestCaseQueryResponse)
+  async filterTestCases(@Args('filterParams') params: FilterTestCasesParams) {
+    console.log('Gets to the filter');
     return this.queryService.filterTestCases(params);
   }
 }

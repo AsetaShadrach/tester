@@ -1,22 +1,42 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TestCaseResolver } from './resolvers/mutationResolver';
-import { AppService } from './app.service';
+import { TestCaseMutationsResolver } from './resolvers/mutationResolver';
+import { TestCaseMutationService } from './services/mutations';
+import { RequestDetailsInput } from 'project_orms/dist/inputs/testCaseIn';
 
 describe('AppController', () => {
-  let appController: TestCaseResolver;
+  let testCaseMutationsResolver: TestCaseMutationsResolver;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
-      controllers: [TestCaseResolver],
-      providers: [AppService],
+      controllers: [TestCaseMutationsResolver],
+      providers: [TestCaseMutationService],
     }).compile();
 
-    appController = app.get<TestCaseResolver>(TestCaseResolver);
+    testCaseMutationsResolver = app.get<TestCaseMutationsResolver>(
+      TestCaseMutationsResolver,
+    );
   });
 
   describe('root', () => {
     it('should return "Hello World!"', () => {
-      // expect(appController.createCase()).toBe('Hello World!');
+      expect(
+        testCaseMutationsResolver.createTestCase({
+          testCase: '',
+          createdBy: '',
+          description: '',
+          parentId: '',
+          groupId: '',
+          testType: '',
+          keysToMaskOnSave: [],
+          runAndSave: '',
+          testReportRecipients: '',
+          retryAfterSuccess: false,
+          status: '',
+          retryMaxAttempts: 0,
+          retryIntervals: 0,
+          requestDetails: new RequestDetailsInput(),
+        }),
+      ).toBe('Hello World!');
     });
   });
 });
