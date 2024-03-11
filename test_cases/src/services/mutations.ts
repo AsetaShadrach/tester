@@ -39,6 +39,23 @@ export class TestCaseMutationService {
     let params: RequestDetailsObject;
     let tC: TestCase;
 
+    // If emailing option is specified make sure there are emails.
+    if(runInputs.runAndSave.includes['email'] && !runInputs.testReportRecipients){
+      return {
+        httpStatus: 400,
+        message: 'An error occured',
+        response: `testReportRecipients expected one or more emails; found ${runInputs.testReportRecipients}`,
+        responseDescription: `For runAndSave option ${runInputs.runAndSave} test recipient emails are expected at testReportRecipients. `+
+          `If you did not wish to send out test report emails, change the runAndSave option`,
+        errors: [
+          {
+            trace: 'Test recipient emails expected at testReportRecipients.',
+            suggest:`If you did not wish to send out test report emails, change the runAndSave option`
+          }
+        ],
+      };
+    }
+
     // Enable running of already saved requests
     // Only use id to check TC details to run if reqParams are not provided
     if (runInputs.parentId && !runInputs.requestDetails) {

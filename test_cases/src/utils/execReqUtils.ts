@@ -256,6 +256,17 @@ export class TcRequestService {
     let parentId = runConfigs?.parentId;
     try {
       const headers: any = {};
+
+      // Formart query params into a query string
+      if(params.queryParams){
+        let queryStringList:Array<string>;
+        for (let query of params.queryParams) {
+          const keyVal = query.split(':');
+          queryStringList.push(`${keyVal[0]}=${keyVal[1]}`)
+        }
+        params.url = params.url+'?'+queryStringList.join('&')
+      }
+
       for (const val of params.headerParams) {
         const keyVal = val.split(':');
         headers[keyVal[0]] = keyVal[1];
