@@ -258,13 +258,13 @@ export class TcRequestService {
       const headers: any = {};
 
       // Formart query params into a query string
-      if(params.queryParams){
-        let queryStringList:Array<string>;
-        for (let query of params.queryParams) {
+      if (params.queryParams) {
+        let queryStringList: Array<string>;
+        for (const query of params.queryParams) {
           const keyVal = query.split(':');
-          queryStringList.push(`${keyVal[0]}=${keyVal[1]}`)
+          queryStringList.push(`${keyVal[0]}=${keyVal[1]}`);
         }
-        params.url = params.url+'?'+queryStringList.join('&')
+        params.url = params.url + '?' + queryStringList.join('&');
       }
 
       for (const val of params.headerParams) {
