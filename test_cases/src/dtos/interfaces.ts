@@ -18,7 +18,7 @@ export interface TestCase {
 }
 
 export interface runConfigs {
-  saveOption?: string;
+  runAndSave?: string;
   retryMaxAttempts?: number;
   retryIntervals?: number;
   parentId?: string; // Will also hold as the testCaseID

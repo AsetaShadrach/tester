@@ -106,6 +106,14 @@ export class TestCase {
   @Field(() => [RequestHistoryObject], { nullable: true })
   requestHistory: Array<RequestHistoryObject>; // Will contain the requestDetails and  finalResponseBody for every request
 
+  @Column({ type: 'jsonb', name: 'request_history', nullable: true })
+  @Field(() => GraphQLJSON, { nullable: true })
+  expectedResponseDetails: JSON; 
+
+  @Column({ type: 'jsonb', name: 'request_history', nullable: true })
+  @Field(() => GraphQLJSON, { nullable: true })
+  analysis: JSON; 
+
   @Column({ type: 'varchar', name: 'last_updated_by', nullable: true })
   @Field({ nullable: true })
   lastUpdatedBy: string;

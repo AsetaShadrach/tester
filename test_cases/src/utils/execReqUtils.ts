@@ -22,12 +22,18 @@ export class TcRequestService {
     data: any,
     requestedAt: Date,
     responseArray: Array<any>,
+    runConfigs?: any,
   ) {
     const tC = await this.testCaseRepository.findOneBy({ id: testCaseId });
 
     console.log(`Updating request history for ${testCaseId}`);
 
     if (tC.requestHistory) {
+      tC.testCase = runConfigs?.testCase;
+      tC.description = runConfigs?.description;
+      tC.groupId = runConfigs?.groupId;
+      tC.testType = runConfigs?.testType;
+
       tC.requestHistory.push({
         request: data,
         requestedAt: requestedAt.toISOString(),
@@ -83,7 +89,7 @@ export class TcRequestService {
       };
     }
 
-    if (runConfigs.saveOption && runConfigs.saveOption.includes('save')) {
+    if (runConfigs.runAndSave && runConfigs.runAndSave.includes('save')) {
       console.log('Saving history for request ', runConfigs.parentId);
 
       if (runConfigs.parentId) {
@@ -92,6 +98,7 @@ export class TcRequestService {
           params,
           requestedAt,
           responseArray,
+          runConfigs,
         );
       } else {
         // If there is no parentId i.e TestCase is not tied to any chain of tests or is an individual test and is flagged to be saved
@@ -215,6 +222,7 @@ export class TcRequestService {
       if (runConfigs.parentId) {
         await this.updateTestCaseHistory(parentId, params, requestedAt, [
           response,
+          runConfigs,
         ]);
       } else {
         const tC = await this.testCaseRepository.save(runConfigs);
