@@ -1,6 +1,6 @@
 export enum TenantType {
   INDIVIDUAL = 'individual',
-  organisation = 'organisation',
+  ORGANISATION = 'organisation',
   APP = 'app', // e.g a scheduled app to run tests
 }
 
@@ -21,7 +21,7 @@ export enum PermissionEffectGroup {
   BASIC = 'basic',
   TEST_ACCOUNT = 'test_account',
   TENANT = 'tenant',
-  organisation = 'organisation',
+  ORGANISATION = 'organisation',
   USER = 'user',
   ROLE = 'role',
   PERMISSION = 'permission',
