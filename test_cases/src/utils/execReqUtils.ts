@@ -255,11 +255,7 @@ export class TcRequestService {
     }
   }
 
-  async executeGetRequest(params: any, runConfigs: runConfigs) {
-    console.log(params.requestType);
-    console.log(params.url);
-    console.log(params.queryParams);
-
+  async executeGetRequest(params: any, runConfigs?: runConfigs) {
     const requestedAt = new Date();
     let parentId = runConfigs?.parentId;
     try {
@@ -309,9 +305,8 @@ export class TcRequestService {
       };
 
       if (runConfigs.parentId) {
-        await this.updateTestCaseHistory(parentId, params, requestedAt, [
-          response,
-        ]);
+        await this.updateTestCaseHistory(parentId, params, requestedAt, 
+          [ response ], runConfigs);
       } else {
         const tC = await this.testCaseRepository.save(runConfigs);
         parentId = tC.id;
