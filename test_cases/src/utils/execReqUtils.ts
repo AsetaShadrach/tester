@@ -29,10 +29,14 @@ export class TcRequestService {
     console.log(`Updating request history for ${testCaseId}`);
 
     if (tC.requestHistory) {
-      tC.testCase = runConfigs?.testCase;
-      tC.description = runConfigs?.description;
-      tC.groupId = runConfigs?.groupId;
-      tC.testType = runConfigs?.testType;
+      tC.requestDetails = runConfigs?.requestDetails;
+      // do not updated testCase meta on every request if its end to end testCase
+      if (!tC.testType.includes('E2E')) {
+        tC.testCase = runConfigs?.testCase;
+        tC.description = runConfigs?.description;
+        tC.groupId = runConfigs?.groupId;
+        tC.testType = runConfigs?.testType;
+      }
 
       tC.requestHistory.push({
         request: data,
@@ -305,8 +309,13 @@ export class TcRequestService {
       };
 
       if (runConfigs.parentId) {
-        await this.updateTestCaseHistory(parentId, params, requestedAt, 
-          [ response ], runConfigs);
+        await this.updateTestCaseHistory(
+          parentId,
+          params,
+          requestedAt,
+          [response],
+          runConfigs,
+        );
       } else {
         const tC = await this.testCaseRepository.save(runConfigs);
         parentId = tC.id;

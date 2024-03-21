@@ -347,6 +347,40 @@ export class FilterTestCasesParams {
   params: TestCaseFilter;
 }
 
+@InputType('RunConfigs')
+export class RunConfigs {
+  @Field({ nullable: true })
+  authToken: string;
+  @Field(() => Int, { nullable: true, defaultValue: false })
+  bytesPerReadChunk: number;
+  @Field({ nullable: true })
+  groupId: string;
+  @Field(() => Int, { nullable: true })
+  customerId: number;
+  @Field(() => Int, { nullable: true })
+  organisationId: number;
+  @Field({ nullable: true })
+  parentId: string;
+  @Field({ nullable: true })
+  runAndSave: string;
+  @Field({ nullable: true, defaultValue: 0 })
+  retryIntervals: number;
+  @Field(() => Int, { nullable: true })
+  retryMaxAttempts: number;
+  @Field(() => Boolean, { nullable: true, defaultValue: false })
+  retryAfterSuccess: boolean;
+  @Field(() => Boolean, { nullable: true, defaultValue: false })
+  streamFileRead: boolean;
+  @Field(() => Int, { nullable: true })
+  tenantId: number;
+  @Field({ nullable: true })
+  testCase: string;
+  @Field({ nullable: true })
+  testType: string;
+  @Field({ nullable: true })
+  uri: string;
+}
+
 export default class TestCaseInputs {
   TestCaseFilter = TestCaseFilter;
   TestCaseInput = TestCaseInput;
@@ -354,4 +388,5 @@ export default class TestCaseInputs {
   RequestDetailsInput = RequestDetailsInput;
   RequestDetailsFilter = RequestDetailsFilter;
   FilterTestCasesParams = FilterTestCasesParams;
+  RunConfigs = RunConfigs;
 }

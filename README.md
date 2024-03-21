@@ -27,3 +27,29 @@ async createMany(users: User[]) {
 5. Confirm foreign key filtering for singletons
 6. Add is email verified or is active to tenants/users
 7. Confirm streaming response from file reads
+
+
+
+???
+/**
+   * runConfigs --> {
+   *    runSave ?
+   *    cascadeResponse ?
+   *    saveDocument ?
+   *    performTestCaseAnalysis ?
+   *    generateDocReport ?
+   *    responseAnalysisLevel ? BASIC, PLAIN, DETAIL, FULL_DETAIL
+   *    performResponseAnalysis ?
+   *    reportDocFormart ? PDF and EXCEL
+   * }
+   *
+   *
+   * params --> {
+   *    testType ?
+   *    groupId ?
+   *    description ?
+   *    testCaseIds ? Ordered list to follow for TCs to execute
+   *    valuesToCascade ? Values to pass from one function to the next eg. auth or entity IDs
+   * }
+   *
+   * */

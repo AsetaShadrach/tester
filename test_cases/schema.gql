@@ -40,6 +40,8 @@ type TestCase {
   retryIntervals: Int!
   requestDetails: RequestDetailsObject!
   requestHistory: [RequestHistoryObject!]
+  expectedResponseDetails: JSON
+  analysis: JSON
   lastUpdatedBy: String
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -189,6 +191,7 @@ type Mutation {
   createTestCase(params: TestCaseInput!): TestCaseMutateResponse!
   updateTestCase(testCaseId: String!, updateParams: TestCaseInput!): TestCase!
   runTestCase(tCRunInput: TestCaseInput): TestCaseMutateResponse!
+  chainTestCases(testCaseIds: StringArray!, chainTestParams: ChainTestParams!, runConfigs: RunConfigs!): JSON!
 }
 
 union TestCaseMutateResponse = TestCase | GenericTypeObject
@@ -270,4 +273,51 @@ input RequestDetailsInput {
   String containing request data that was not passed as a bodyParam or queryParam
   """
   reqText: String
+}
+
+input StringArray {
+  items: [String!]
+}
+
+input ChainTestParams {
+  authParams: E2EAuthParams!
+  createdBy: String
+  description: String
+  testReportRecipients: String
+  keysToMaskOnSave: [String!]
+}
+
+input E2EAuthParams {
+  cascadeAuth: Boolean!
+  authId: String!
+  keysToAssignValuesTo: [String!]!
+  valuesToPickFromResponse: [String!]!
+
+  """
+  What to prefix the specified header with e.g "Bearer "
+  """
+  prefixWith: [String!]!
+
+  """
+  auto: runConfigkeys will be auto replaced , skip: no replacing will happen, manual: replaced as specified by request details
+  """
+  replacePattern: String! = "skip"
+}
+
+input RunConfigs {
+  authToken: String
+  bytesPerReadChunk: Int = 0
+  groupId: String
+  customerId: Int
+  organisationId: Int
+  parentId: String
+  runAndSave: String
+  retryIntervals: Float = 0
+  retryMaxAttempts: Int
+  retryAfterSuccess: Boolean = false
+  streamFileRead: Boolean = false
+  tenantId: Int
+  testCase: String
+  testType: String
+  uri: String
 }

@@ -41,6 +41,7 @@ export class TestCaseMutationService {
 
     // If emailing option is specified make sure there are emails.
     if (
+      runInputs.runAndSave &&
       runInputs.runAndSave.includes['email'] &&
       !runInputs.testReportRecipients
     ) {
@@ -110,4 +111,5 @@ export class TestCaseMutationService {
 
     return response;
   }
+
 }

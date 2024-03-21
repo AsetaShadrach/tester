@@ -11,6 +11,8 @@ import { TestCase } from 'project_orms/dist/entities/testCases';
 import { TcRequestService } from './utils/execReqUtils';
 import { HttpModule } from '@nestjs/axios';
 import * as path from 'path';
+import { E2EProcessResolver } from './resolvers/e2eResolvers';
+import { E2EProcessService } from './services/processGroupReqUtils.';
 
 @Module({
   imports: [
@@ -52,10 +54,12 @@ import * as path from 'path';
     TestCaseMutationService,
     TestCaseQueryService,
     TcRequestService,
+    E2EProcessService,
 
     // Resolvers
     TestCaseMutationsResolver,
     TestCaseQueryResolver,
+    E2EProcessResolver,
   ],
 })
 export class AppModule {}
