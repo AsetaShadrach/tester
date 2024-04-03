@@ -6,8 +6,6 @@
 
 *.lock
 *.log
-package-lock.json
+*lock.json
 
-**/transactions
-**/astra
-**/infiniti
+**/*_internal

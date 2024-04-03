@@ -16,7 +16,7 @@ export class TcRequestService {
     private readonly testCaseRepository: Repository<TestCase>,
   ) {}
 
-  // uUpdate test case history after response
+  // Update test case history after response
   async updateTestCaseHistory(
     testCaseId: string,
     data: any,
@@ -46,6 +46,24 @@ export class TcRequestService {
       });
       await this.testCaseRepository.save(tC);
     } else {
+
+      // Default time thresholds
+      const timeThresholds = {
+        best: 300,
+        good: 600,
+        okay: 1200,
+        bad: 2400,
+        terrible: 4800,
+      };
+
+      const expectedResponseDetails = {
+        ...tC.expectedResponseDetails,
+        testCaseIds: [tC.id],
+        timeThresholds: timeThresholds,
+      };
+
+      tC.expectedResponseDetails = expectedResponseDetails;
+
       tC.requestHistory = [
         {
           request: data,
@@ -214,7 +232,7 @@ export class TcRequestService {
 
       const observableResponse = await lastValueFrom(obsv);
 
-      console.log('ObservableResponse =============================');
+      console.log('POST ObservableResponse =============================');
       console.log(observableResponse);
       console.log('================================================');
       const response = {
@@ -299,7 +317,7 @@ export class TcRequestService {
 
       const observableResponse = await lastValueFrom(obsv);
 
-      console.log('ObservableResponse =============================');
+      console.log('GET ObservableResponse =============================');
       console.log(observableResponse);
       console.log('================================================');
       const response = {
@@ -376,7 +394,7 @@ export class TcRequestService {
 
       const observableResponse = await lastValueFrom(obsv);
 
-      console.log('ObservableResponse =============================');
+      console.log('DELETE ObservableResponse =============================');
       console.log(observableResponse);
       console.log('================================================');
       const response = {

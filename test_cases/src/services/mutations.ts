@@ -34,7 +34,7 @@ export class TestCaseMutationService {
     return tC;
   }
 
-  async runTestCase(runInputs: TestCaseInput) {
+  async runTestCase(runInputs: TestCaseInput, extraData?: any) {
     let response: any;
     let params: RequestDetailsObject;
     let tC: TestCase;
@@ -87,19 +87,31 @@ export class TestCaseMutationService {
       };
     }
 
+    let finalParams: any = {
+      ...params,
+    };
+
+    // Allows you to add the ID of the inittial test case if there is need for future referencing
+    if (extraData) {
+      finalParams = {
+        ...finalParams,
+        ...extraData,
+      };
+    }
+
     if (['post', 'patch', 'put'].includes(params.requestType)) {
       response = await this.tcRequestService.executePostRequest(
-        params,
+        finalParams,
         runInputs,
       );
-    } else if (params.requestType === 'get') {
+    } else if (finalParams.requestType === 'get') {
       response = await this.tcRequestService.executeGetRequest(
-        params,
+        finalParams,
         runInputs,
       );
-    } else if (params.requestType === 'delete') {
+    } else if (finalParams.requestType === 'delete') {
       response = await this.tcRequestService.executeDeleteRequest(
-        params,
+        finalParams,
         runInputs,
       );
     }
@@ -111,5 +123,4 @@ export class TestCaseMutationService {
 
     return response;
   }
-
 }

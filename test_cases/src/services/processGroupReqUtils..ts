@@ -44,8 +44,8 @@ export class E2EProcessService {
       requestDetails: currentTC.requestDetails,
     };
 
-    let response = await this.testCaseMutationService.runTestCase(authInput);
-    //Auytomatically pass refence IDs
+    let response = await this.testCaseMutationService.runTestCase(authInput, {initialTcId: authParams.authId});
+    //Automatically pass refence IDs
     this.runConfigs.parentId = response.referenceIds.parentId;
     this.runConfigs.groupId = response.referenceIds.groupId;
 
@@ -170,7 +170,9 @@ export class E2EProcessService {
           parentId: this.runConfigs.parentId,
         };
 
-        await this.testCaseMutationService.runTestCase(newTc);
+        await this.testCaseMutationService.runTestCase(newTc, {
+          initialTcId: id
+        });
 
         lastRunTc = {
           id: id,
@@ -181,6 +183,19 @@ export class E2EProcessService {
         lastRunDetails = newReqDetails;
       }
     }
+
+    const Tc = await this.testCaseRepository.findOneBy({
+      id: this.runConfigs.parentId,
+    });
+
+    const newExpRespDetails = {
+      ...Tc.expectedResponseDetails,
+      testCaseIds: [authParams.authId, ...tCaseIds],
+    };
+
+    Tc.expectedResponseDetails = newExpRespDetails;
+
+    await this.testCaseRepository.save(Tc);
 
     return {
       httpStatus: 200,
