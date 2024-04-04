@@ -6,7 +6,7 @@ import { TestCase } from 'project_orms/dist/entities/testCases';
 import { Observable, lastValueFrom, map, repeat } from 'rxjs';
 import { runConfigs } from 'src/dtos/interfaces';
 import { Repository } from 'typeorm';
-import querystring from 'querystring';
+import * as querystring from 'querystring';
 
 @Injectable()
 export class TcRequestService {
@@ -46,7 +46,6 @@ export class TcRequestService {
       });
       await this.testCaseRepository.save(tC);
     } else {
-
       // Default time thresholds
       const timeThresholds = {
         best: 300,
