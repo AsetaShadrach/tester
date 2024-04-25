@@ -117,7 +117,7 @@ export class TestCaseMutationService {
     }
 
     console.log(
-      `Response from running test case ${runInputs.parentId || ''} :: `,
+      `Response from running test case ${runInputs.parentId || response.referenceIds.parentId || ''} :: `,
       response,
     );
 

@@ -87,9 +87,13 @@ export class TcRequestService {
 
     if (error.response) {
       // Switched from array of strings to arrya of JSONs
-      responseArray.push(
-        error.response.data[0] || { ...error.response.data.error },
-      );
+      if (typeof error.response.data == 'string') {
+        responseArray.push(error.response.data);
+      } else if (Array.isArray(error.response.data)) {
+        responseArray.push(...error.response.data);
+      } else {
+        responseArray.push(error.response.data);
+      }
 
       errorResponse = {
         httpStatus: error.response.status || 500,
@@ -143,12 +147,28 @@ export class TcRequestService {
       const form: any = {};
       for (const val of params.bodyParams) {
         const keyVal = val.split(':');
-        if (!keyVal[2]) {
-          form[keyVal[0]] = keyVal[1];
-        } else if (keyVal[2] === 'int') {
-          form[keyVal[0]] = parseInt(keyVal[1]);
-        } else if (keyVal[2] === 'float') {
-          form[keyVal[0]] = parseFloat(keyVal[1]);
+        if (keyVal[0].includes('.')) {
+          // Then this is a json
+          const jsonKeys = keyVal[0].split('.');
+
+          if (!keyVal[2]) {
+            const newVal = { [jsonKeys[1]]: keyVal[1] };
+            form[`${jsonKeys[0]}`] = { ...form[`${jsonKeys[0]}`], ...newVal };
+          } else if (keyVal[2] === 'int') {
+            const newVal = { [jsonKeys[1]]: parseInt(keyVal[1]) };
+            form[`${jsonKeys[0]}`] = { ...form[`${jsonKeys[0]}`], ...newVal };
+          } else if (keyVal[2] === 'float') {
+            const newVal = { [jsonKeys[1]]: parseFloat(keyVal[1]) };
+            form[`${jsonKeys[0]}`] = { ...form[`${jsonKeys[0]}`], ...newVal };
+          }
+        } else {
+          if (!keyVal[2]) {
+            form[keyVal[0]] = keyVal[1];
+          } else if (keyVal[2] === 'int') {
+            form[keyVal[0]] = parseInt(keyVal[1]);
+          } else if (keyVal[2] === 'float') {
+            form[keyVal[0]] = parseFloat(keyVal[1]);
+          }
         }
       }
 
