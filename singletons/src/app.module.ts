@@ -13,16 +13,24 @@ import { UserService } from './services/users';
 import { RoleService } from './services/roles';
 import { PermissionService } from './services/permissions';
 
-import { TestAccount, Permission, Role, User, Tenant } from "project_orms/dist/entities/singeltons";
+import {
+  TestAccount,
+  Permission,
+  Role,
+  User,
+  Tenant,
+} from 'project_orms/dist/entities/singeltons';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import path = require('path');
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    
+
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -34,19 +42,38 @@ import path = require('path');
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DATABASE'),
         // entities: [TestAccount, Permission, Role, User, Tenant],
-        entities: [path.join(__dirname, '../node_modules/project_orms/dist/entities/singeltons{.ts,.js}')],
+        entities: [
+          path.join(
+            __dirname,
+            '../node_modules/project_orms/dist/entities/singeltons{.ts,.js}',
+          ),
+        ],
         synchronize: true,
       }),
     }),
 
     TypeOrmModule.forFeature([TestAccount, Permission, Role, User, Tenant]),
+
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: 'schema.gql',
+      path: '/singletons',
+    }),
   ],
   providers: [
     // Services
-    TenantService, TestAccountService, UserService, RoleService, PermissionService,
-    
+    TenantService,
+    TestAccountService,
+    UserService,
+    RoleService,
+    PermissionService,
+
     // Resolvers
-    TenantsResolver, TestAccountsResolver, UsersResolver, RolesResolver, PermissionsResolver,
+    TenantsResolver,
+    TestAccountsResolver,
+    UsersResolver,
+    RolesResolver,
+    PermissionsResolver,
   ],
 })
 export class AppModule {}

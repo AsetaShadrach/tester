@@ -15,6 +15,7 @@ import {
   TestAccountTypes,
   TenantType,
 } from '../enums/singeltonsE';
+import GraphQLJSON from 'graphql-type-json';
 
 @Entity('Permission')
 @ObjectType('PermissionObject')
@@ -49,7 +50,7 @@ export class Permission {
   isApproved: boolean;
 
   @Column({ type: 'jsonb', name: 'pending_update_json', nullable: true })
-  @Field()
+  @Field(() => GraphQLJSON, { nullable: true })
   pendingUpdateJson: JSON;
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
@@ -96,7 +97,7 @@ export class Role {
   isApproved: boolean;
 
   @Column({ type: 'jsonb', name: 'pending_update_json', nullable: true })
-  @Field()
+  @Field(() => GraphQLJSON, { nullable: true })
   pendingUpdateJson: JSON;
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
@@ -172,7 +173,7 @@ export class TestAccount {
   role: Role[];
 
   @Column({ type: 'jsonb', name: 'pending_update_json', nullable: true })
-  @Field()
+  @Field(() => GraphQLJSON, { nullable: true })
   pendingUpdateJson: JSON;
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
@@ -210,7 +211,7 @@ export class User {
   role: Role[];
 
   @Column({ type: 'jsonb', name: 'pending_update_json', nullable: true })
-  @Field()
+  @Field(() => GraphQLJSON, { nullable: true })
   pendingUpdateJson: JSON;
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
@@ -264,7 +265,7 @@ export class Tenant {
   role: Role[];
 
   @Column({ type: 'jsonb', name: 'pending_update_json', nullable: true })
-  @Field()
+  @Field(() => GraphQLJSON, { nullable: true })
   pendingUpdateJson: JSON;
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
