@@ -1,3 +1,5 @@
+import { registerEnumType } from '@nestjs/graphql';
+
 export enum TenantType {
   INDIVIDUAL = 'individual',
   ORGANISATION = 'organisation',
@@ -45,3 +47,9 @@ export enum PermissionScope {
   DB = 'db',
   REPORTS = 'reports',
 }
+
+registerEnumType(TenantType, { name: 'TenantType' });
+registerEnumType(TestAccountTypes, { name: 'TestAccountTypes' });
+registerEnumType(UserTypes, { name: 'UserTypes' });
+registerEnumType(PermissionEffectGroup, { name: 'PermissionEffectGroup' });
+registerEnumType(PermissionScope, { name: 'PermissionScope' });

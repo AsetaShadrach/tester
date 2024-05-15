@@ -8,6 +8,10 @@ import {
   PermissionUpdateInput,
 } from 'project_orms/dist/inputs/singeltonIn';
 import { composeFilterParams } from 'src/utils/queryUtils';
+import {
+  PermissionEffectGroup,
+  PermissionScope,
+} from 'project_orms/dist/enums/singeltonsE';
 
 @Injectable()
 export class PermissionService {
@@ -15,8 +19,17 @@ export class PermissionService {
     @InjectRepository(Permission)
     private permissionRepository: Repository<Permission>,
   ) {}
+
   getHello(): string {
     return 'Hello from PermissionService!';
+  }
+
+  getPermissionEnumVals(enumKey: string) {
+    if (enumKey == 'effectGroup') {
+      return Object.keys(PermissionEffectGroup);
+    } else if (enumKey == 'scope') {
+      return Object.keys(PermissionScope);
+    }
   }
 
   async createPermission(params: PermissionInput) {

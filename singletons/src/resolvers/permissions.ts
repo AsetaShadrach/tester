@@ -1,4 +1,4 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Permission } from 'project_orms/dist/entities/singeltons';
 import { PermissionService } from './../services/permissions';
 import {
@@ -9,6 +9,17 @@ import {
 @Resolver('Permissions')
 export class PermissionsResolver {
   constructor(private permissionService: PermissionService) {}
+
+  @Query(() => String)
+  getHello() {
+    // To fullfil query requirement for graphQL
+    return 'Singeltons resolver is Up';
+  }
+
+  @Query(() => [String])
+  getOptionValues(@Args('optionName') optionName: string) {
+    return this.permissionService.getPermissionEnumVals(optionName);
+  }
 
   @Mutation(() => Permission)
   async createPermission(

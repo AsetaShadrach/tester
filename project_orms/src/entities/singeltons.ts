@@ -3,8 +3,6 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   Unique,
   UpdateDateColumn,
@@ -16,6 +14,7 @@ import {
   TenantType,
 } from '../enums/singeltonsE';
 import GraphQLJSON from 'graphql-type-json';
+import { GraphQLString } from 'graphql';
 
 @Entity('Permission')
 @ObjectType('PermissionObject')
@@ -34,15 +33,16 @@ export class Permission {
     enum: PermissionEffectGroup,
     default: PermissionEffectGroup.BASIC,
   })
-  @Field()
-  permissionEffectGroup: string;
+  @Field(() => PermissionEffectGroup)
+  permissionEffectGroup: PermissionEffectGroup;
 
   @Column({
     type: 'enum',
     name: 'permission_scope',
     enum: PermissionScope,
+    default: PermissionScope.GENERAL,
   })
-  @Field()
+  @Field(() => PermissionScope)
   permissionScope: string;
 
   @Column({ type: 'boolean', default: false })
@@ -86,11 +86,11 @@ export class Role {
   @Field()
   canBePassedAsDefault: boolean;
 
-  @OneToMany(() => Permission, (Permission) => Permission.permission, {
-    onDelete: 'NO ACTION',
+  @Column({ type: 'varchar' })
+  @Field(() => GraphQLString, {
+    description: 'Comma seperated string of IDs of permissions',
   })
-  @Field(() => [Permission])
-  permissions: Permission[];
+  permissions: string;
 
   @Column({ type: 'boolean', default: false })
   @Field()
@@ -163,14 +163,14 @@ export class TestAccount {
     enum: TestAccountTypes,
     default: TestAccountTypes.INDIVIDUAL,
   })
-  @Field()
-  testAccountType: string;
+  @Field(() => TestAccountTypes)
+  testAccountType: TestAccountTypes;
 
-  @ManyToOne(() => Role, (Role) => Role.role, {
-    onDelete: 'NO ACTION',
+  @Column({ type: 'varchar' })
+  @Field(() => GraphQLString, {
+    description: 'Comma seperated string of IDs of roles',
   })
-  @Field(() => Role)
-  role: Role[];
+  role: string;
 
   @Column({ type: 'jsonb', name: 'pending_update_json', nullable: true })
   @Field(() => GraphQLJSON, { nullable: true })
@@ -190,25 +190,29 @@ export class TestAccount {
 }
 
 @Entity('User')
-@ObjectType('User')
+@ObjectType('UserObject')
 export class User {
   @PrimaryGeneratedColumn('uuid')
+  @Field(() => ID)
   id: string;
 
   @Column({ type: 'varchar', name: 'first_name' })
+  @Field()
   firstName: string;
 
   @Column({ type: 'varchar', name: 'last_name' })
+  @Field()
   lastName: string;
 
   @Column({ type: 'varchar', unique: true })
+  @Field()
   email: string;
 
-  @ManyToOne(() => Role, (Role) => Role.role, {
-    onDelete: 'NO ACTION',
+  @Column({ type: 'varchar' })
+  @Field(() => GraphQLString, {
+    description: 'Comma seperated string of IDs of roles',
   })
-  @Field(() => Role)
-  role: Role[];
+  role: string;
 
   @Column({ type: 'jsonb', name: 'pending_update_json', nullable: true })
   @Field(() => GraphQLJSON, { nullable: true })
@@ -249,20 +253,22 @@ export class Tenant {
     enum: TenantType,
     default: TenantType.INDIVIDUAL,
   })
-  @Field()
+  @Field(() => TenantType)
   tenantType: string;
 
-  @OneToMany(() => Tenant, (Tenant) => Tenant.username, {
-    onDelete: 'NO ACTION',
+  @Column({ type: 'varchar' })
+  @Field(() => GraphQLString, {
+    description:
+      'Comma seperated string of IDs of parents tenants to this tenant',
   })
-  @Field(() => Tenant)
-  subTenants: Tenant[];
+  parentTenants: string;
 
-  @OneToMany(() => Role, (Role) => Role.role, {
-    onDelete: 'NO ACTION',
+  @Column({ type: 'varchar' })
+  @Field(() => GraphQLString, {
+    description:
+      'Comma seperated string of IDs of parents tenants to this tenant',
   })
-  @Field(() => [Role], { nullable: true })
-  role: Role[];
+  subTenants: string;
 
   @Column({ type: 'jsonb', name: 'pending_update_json', nullable: true })
   @Field(() => GraphQLJSON, { nullable: true })

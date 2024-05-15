@@ -1,0 +1,261 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type PermissionObject {
+  id: ID!
+  permission: String!
+  permissionEffectGroup: PermissionEffectGroup!
+  permissionScope: PermissionScope!
+  isApproved: Boolean!
+  pendingUpdateJson: JSON
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  lastUpdatedBy: String!
+}
+
+enum PermissionEffectGroup {
+  BASIC
+  TEST_ACCOUNT
+  TENANT
+  ORGANISATION
+  USER
+  ROLE
+  PERMISSION
+}
+
+enum PermissionScope {
+  GENERAL
+  SECURITY
+  NETWORK
+  USERS
+  TRANSACTIONS
+  STORAGE
+  PAYLOAD
+  BILLING
+  INFRASTRUCTURE
+  DEVICES
+  LOGS
+  PIPELINES
+  CI_CD
+  ML_AI
+  DB
+  REPORTS
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type RoleObject {
+  id: ID!
+  role: String!
+  canBePassedAsDefault: Boolean!
+
+  """Comma seperated string of IDs of permissions"""
+  permissions: String!
+  isApproved: Boolean!
+  pendingUpdateJson: JSON
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  lastUpdatedBy: String!
+}
+
+type TestAccountObject {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  phoneNumber: String!
+  idNumber: String
+  idNumberType: String
+  taxDocumentPin: String!
+  taxDocumentPinType: String
+  age: Int!
+  testAccountType: TestAccountTypes!
+
+  """Comma seperated string of IDs of roles"""
+  role: String!
+  pendingUpdateJson: JSON
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  lastUpdatedBy: String!
+}
+
+enum TestAccountTypes {
+  INDIVIDUAL
+  SOLE_PARTNERSHIP
+  LIMITED_CO
+  TESTER
+}
+
+type UserObject {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+
+  """Comma seperated string of IDs of roles"""
+  role: String!
+  pendingUpdateJson: JSON
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  lastUpdatedBy: String!
+}
+
+type TenantObject {
+  id: ID!
+  username: String!
+  email: String!
+  tenantType: TenantType!
+
+  """Comma seperated string of IDs of parents tenants to this tenant"""
+  parentTenants: String!
+
+  """Comma seperated string of IDs of parents tenants to this tenant"""
+  subTenants: String!
+  pendingUpdateJson: JSON
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  lastUpdatedBy: String!
+}
+
+enum TenantType {
+  INDIVIDUAL
+  ORGANISATION
+  APP
+}
+
+type Query {
+  getHello: String!
+  getOptionValues(optionName: String!): [String!]!
+}
+
+type Mutation {
+  createTenant(tenantCreationInput: TenantInput!): TenantObject!
+  updateTenant(testAccountId: String!, testAccountUpdateInput: TestAccountUpdateInput!): TestAccountObject!
+  createTestAccount(testAccountCreationInput: TestAccountInput!): TestAccountObject!
+  createUser(userCreationInput: UserInput!): UserObject!
+  updateUser(userId: String!, userUpdateInput: UserUpdateInput!): UserObject!
+  createRole(roleCreationInput: RoleInput!): RoleObject!
+  updateRole(roleId: String!, roleUpdateInput: RoleUpdateInput!): RoleObject!
+  createPermission(permissionCreationInput: PermissionInput!): PermissionObject!
+  updatePermission(permissionId: String!, permissionUpdateInput: PermissionUpdateInput!): PermissionObject!
+}
+
+input TenantInput {
+  username: String!
+  email: String!
+  tenantType: TenantType!
+
+  """Comma seperated string of Ids of tenants this tenant belongs to"""
+  parentTenants: String
+
+  """Comma seperated string of Ids of sub tenants"""
+  subTenants: String
+  lastUpdatedBy: String!
+}
+
+input TestAccountUpdateInput {
+  firstName: String
+  lastName: String
+  email: String
+  phoneNumber: String
+  idNumber: String
+  idNumberType: String
+  taxDocumentPin: String
+  taxDocumentPinType: String
+  age: Int
+  testAccountType: TestAccountTypes
+
+  """Comma seperated string of Role Ids"""
+  role: String
+  lastUpdatedBy: String
+}
+
+input TestAccountInput {
+  firstName: String!
+  lastName: String!
+  email: String!
+  phoneNumber: String!
+  idNumber: String
+  idNumberType: String
+  taxDocumentPin: String
+  taxDocumentPinType: String
+  age: Int!
+  testAccountType: TestAccountTypes!
+
+  """Comma seperated string of Role Ids"""
+  role: String
+  lastUpdatedBy: String!
+}
+
+input UserInput {
+  firstName: String!
+  lastName: String!
+  email: String!
+  userType: UserTypes!
+
+  """Comma seperated string of Role Ids"""
+  role: String
+  lastUpdatedBy: String!
+}
+
+enum UserTypes {
+  ADMIN
+  DEV
+  LIMITED_CO
+}
+
+input UserUpdateInput {
+  firstName: String
+  lastName: String
+  email: String
+  userType: UserTypes
+
+  """Comma seperated string of Role Ids"""
+  role: String
+  lastUpdatedBy: String
+}
+
+input RoleInput {
+  role: String!
+  canBePassedAsDefault: Boolean!
+
+  """If blank , will pass default permission"""
+  permissions: String
+  isApproved: Boolean!
+  lastUpdatedBy: String!
+}
+
+input RoleUpdateInput {
+  role: String
+  canBePassedAsDefault: Boolean
+
+  """If blank , will pass default permission"""
+  permissions: String
+  isApproved: Boolean
+  lastUpdatedBy: String
+}
+
+input PermissionInput {
+  permission: String!
+  isApproved: Boolean!
+  permissionEffectGroup: PermissionEffectGroup!
+  permissionScope: PermissionScope!
+  lastUpdatedBy: String!
+}
+
+input PermissionUpdateInput {
+  permission: String
+  isApproved: Boolean
+  permissionEffectGroup: PermissionEffectGroup
+  permissionScope: PermissionScope
+  lastUpdatedBy: String
+}

@@ -19,7 +19,7 @@ export class UserService {
   }
 
   async createUser(params: UserInput) {
-    return this.userRepository.save(params);
+    return await this.userRepository.save(params);
   }
 
   async updateUser(id: string, params: UserUpdateInput) {

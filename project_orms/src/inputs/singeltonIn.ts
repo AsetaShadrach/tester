@@ -1,44 +1,57 @@
 import { Field, Int, InputType, PartialType } from '@nestjs/graphql';
-import { Permission, Role, Tenant } from '../entities/singeltons';
-import { TestAccountTypes } from '../enums/singeltonsE';
-import { GraphQLBoolean } from 'graphql';
+import {
+  PermissionEffectGroup,
+  PermissionScope,
+  TenantType,
+  TestAccountTypes,
+  UserTypes,
+} from '../enums/singeltonsE';
+import { GraphQLBoolean, GraphQLString } from 'graphql';
+import { IsEmail, IsNotEmpty, IsPhoneNumber } from 'class-validator';
 
 @InputType('PermissionInput')
 export class PermissionInput {
+  @IsNotEmpty()
   @Field()
   permission: string;
 
   @Field(() => GraphQLBoolean)
   isApproved: boolean;
 
-  @Field()
-  permissionEffectGroup: string;
+  @Field(() => PermissionEffectGroup)
+  permissionEffectGroup: PermissionEffectGroup;
 
-  @Field()
-  permissionScope: string;
+  @Field(() => PermissionScope)
+  permissionScope: PermissionScope;
 
-  @Field({ nullable: true })
+  @IsNotEmpty()
+  @Field()
   lastUpdatedBy: string;
 }
 
-@InputType('PermissionInput')
+@InputType('PermissionUpdateInput')
 export class PermissionUpdateInput extends PartialType(PermissionInput) {}
 
 @InputType('RoleInput')
 export class RoleInput {
+  @IsNotEmpty()
   @Field()
   role: string;
 
   @Field()
   canBePassedAsDefault: boolean;
 
-  @Field(() => [Permission], { nullable: true })
-  permissions: Permission[];
+  @Field(() => GraphQLString, {
+    nullable: true,
+    description: 'If blank , will pass default permission',
+  })
+  permissions: string;
 
   @Field()
   isApproved: boolean;
 
-  @Field({ nullable: true })
+  @IsNotEmpty()
+  @Field()
   lastUpdatedBy: string;
 }
 
@@ -47,15 +60,19 @@ export class RoleUpdateInput extends PartialType(RoleInput) {}
 
 @InputType('TestAccountInput')
 export class TestAccountInput {
+  @IsNotEmpty()
   @Field()
   firstName: string;
 
+  @IsNotEmpty()
   @Field()
   lastName: string;
 
+  @IsEmail()
   @Field()
   email: string;
 
+  @IsPhoneNumber()
   @Field()
   phoneNumber: string;
 
@@ -75,12 +92,16 @@ export class TestAccountInput {
   age: number;
 
   @Field(() => TestAccountTypes)
-  testAccountType: string;
+  testAccountType: TestAccountTypes;
 
-  @Field(() => Role)
-  role: Role[];
+  @Field(() => GraphQLString, {
+    nullable: true,
+    description: 'Comma seperated string of Role Ids',
+  })
+  role: string;
 
-  @Field({ nullable: true })
+  @IsNotEmpty()
+  @Field()
   lastUpdatedBy: string;
 }
 
@@ -89,19 +110,29 @@ export class TestAccountUpdateInput extends PartialType(TestAccountInput) {}
 
 @InputType('UserInput')
 export class UserInput {
+  @IsNotEmpty()
   @Field()
   firstName: string;
 
+  @IsNotEmpty()
   @Field()
   lastName: string;
 
+  @IsEmail()
   @Field()
   email: string;
 
-  @Field(() => Role, { nullable: true })
-  role: Role[];
+  @Field(() => UserTypes)
+  userType: UserTypes;
 
-  @Field({ nullable: true })
+  @Field(() => GraphQLString, {
+    nullable: true,
+    description: 'Comma seperated string of Role Ids',
+  })
+  role: string;
+
+  @IsNotEmpty()
+  @Field()
   lastUpdatedBy: string;
 }
 
@@ -110,22 +141,33 @@ export class UserUpdateInput extends PartialType(UserInput) {}
 
 @InputType('TenantInput')
 export class TenantInput {
+  @IsNotEmpty()
   @Field()
   username: string;
 
+  @IsNotEmpty()
   @Field()
   email: string;
 
+  @IsNotEmpty()
+  @Field(() => TenantType)
+  tenantType: TenantType;
+
+  @Field(() => GraphQLString, {
+    nullable: true,
+    description:
+      'Comma seperated string of Ids of tenants this tenant belongs to',
+  })
+  parentTenants: string;
+
+  @Field(() => GraphQLString, {
+    nullable: true,
+    description: 'Comma seperated string of Ids of sub tenants',
+  })
+  subTenants: string;
+
+  @IsNotEmpty()
   @Field()
-  tenantType: string;
-
-  @Field(() => Tenant)
-  subTenants: Tenant[];
-
-  @Field(() => Role)
-  role: Role[];
-
-  @Field({ nullable: true })
   lastUpdatedBy: string;
 }
 
