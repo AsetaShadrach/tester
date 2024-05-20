@@ -7,11 +7,7 @@ import {
   PermissionInput,
   PermissionUpdateInput,
 } from 'project_orms/dist/inputs/singeltonIn';
-import { composeFilterParams } from 'src/utils/queryUtils';
-import {
-  PermissionEffectGroup,
-  PermissionScope,
-} from 'project_orms/dist/enums/singeltonsE';
+import { composeSettingsFilterParams } from 'src/utils/queryUtils';
 
 @Injectable()
 export class PermissionService {
@@ -22,14 +18,6 @@ export class PermissionService {
 
   getHello(): string {
     return 'Hello from PermissionService!';
-  }
-
-  getPermissionEnumVals(enumKey: string) {
-    if (enumKey == 'effectGroup') {
-      return Object.keys(PermissionEffectGroup);
-    } else if (enumKey == 'scope') {
-      return Object.keys(PermissionScope);
-    }
   }
 
   async createPermission(params: PermissionInput) {
@@ -46,18 +34,17 @@ export class PermissionService {
   async filterPermissions(
     filterParams: any,
   ): Promise<{ items: Permission[]; count: number }> {
-    let users: any;
-
+    let permissions: any;
     if (filterParams.params && filterParams.params.id) {
       // This section handles UUID types specifically i.e not VARCHAR
-      users = await this.permissionRepository.findAndCountBy({
+      permissions = await this.permissionRepository.findAndCountBy({
         id: filterParams.params.id,
       });
     } else {
-      const filters = composeFilterParams(filterParams);
-      users = await this.permissionRepository.findAndCount(filters);
+      const filters = composeSettingsFilterParams(filterParams);
+      permissions = await this.permissionRepository.findAndCount(filters);
     }
 
-    return { items: users[0], count: users[0].length };
+    return { items: permissions[0], count: permissions[0].length };
   }
 }

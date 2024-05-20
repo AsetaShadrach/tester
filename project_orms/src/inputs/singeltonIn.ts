@@ -8,6 +8,13 @@ import {
 } from '../enums/singeltonsE';
 import { GraphQLBoolean, GraphQLString } from 'graphql';
 import { IsEmail, IsNotEmpty, IsPhoneNumber } from 'class-validator';
+import {
+  Permission,
+  Role,
+  Tenant,
+  TestAccount,
+  User,
+} from '../entities/singeltons';
 
 @InputType('PermissionInput')
 export class PermissionInput {
@@ -23,10 +30,6 @@ export class PermissionInput {
 
   @Field(() => PermissionScope)
   permissionScope: PermissionScope;
-
-  @IsNotEmpty()
-  @Field()
-  lastUpdatedBy: string;
 }
 
 @InputType('PermissionUpdateInput')
@@ -49,10 +52,6 @@ export class RoleInput {
 
   @Field()
   isApproved: boolean;
-
-  @IsNotEmpty()
-  @Field()
-  lastUpdatedBy: string;
 }
 
 @InputType('RoleUpdateInput')
@@ -99,10 +98,6 @@ export class TestAccountInput {
     description: 'Comma seperated string of Role Ids',
   })
   role: string;
-
-  @IsNotEmpty()
-  @Field()
-  lastUpdatedBy: string;
 }
 
 @InputType('TestAccountUpdateInput')
@@ -130,10 +125,6 @@ export class UserInput {
     description: 'Comma seperated string of Role Ids',
   })
   role: string;
-
-  @IsNotEmpty()
-  @Field()
-  lastUpdatedBy: string;
 }
 
 @InputType('UserUpdateInput')
@@ -165,14 +156,28 @@ export class TenantInput {
     description: 'Comma seperated string of Ids of sub tenants',
   })
   subTenants: string;
-
-  @IsNotEmpty()
-  @Field()
-  lastUpdatedBy: string;
 }
 
 @InputType('TenantUpdateInput')
-export class TenantUpdateInput extends PartialType(TenantInput) {}
+export class TenantUpdateInput extends PartialType(TenantInput, InputType) {}
+
+@InputType('FilterUserInput')
+export class FilterUserInput extends PartialType(User, InputType) {}
+
+@InputType('FilterTestAccountInput')
+export class FilterTestAccountInput extends PartialType(
+  TestAccount,
+  InputType,
+) {}
+
+@InputType('FilterPermissionInput')
+export class FilterPermissionInput extends PartialType(Permission, InputType) {}
+
+@InputType('FilterRoleInput')
+export class FilterRoleInput extends PartialType(Role, InputType) {}
+
+@InputType('FilterTenantInput')
+export class FilterTenantInput extends PartialType(Tenant) {}
 
 export default class singeltonInputs {
   UserInput = UserInput;

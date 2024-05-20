@@ -7,7 +7,7 @@ import {
   RoleInput,
   RoleUpdateInput,
 } from 'project_orms/dist/inputs/singeltonIn';
-import { composeFilterParams } from 'src/utils/queryUtils';
+import { composeSettingsFilterParams } from 'src/utils/queryUtils';
 
 @Injectable()
 export class RoleService {
@@ -19,7 +19,15 @@ export class RoleService {
   }
 
   async createRole(params: RoleInput) {
-    return this.roleRepository.save(params);
+    if (!params.role) {
+      params.role = 'General User';
+    }
+
+    const fullParams = {
+      ...params,
+      lastUpdatedBy:"system"
+    }
+    return this.roleRepository.save(fullParams);
   }
 
   async updateRole(id: string, params: RoleUpdateInput) {
@@ -40,7 +48,7 @@ export class RoleService {
         id: filterParams.params.id,
       });
     } else {
-      const filters = composeFilterParams(filterParams);
+      const filters = composeSettingsFilterParams(filterParams);
       users = await this.roleRepository.findAndCount(filters);
     }
 

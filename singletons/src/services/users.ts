@@ -7,7 +7,7 @@ import {
   UserInput,
   UserUpdateInput,
 } from 'project_orms/dist/inputs/singeltonIn';
-import { composeFilterParams } from 'src/utils/queryUtils';
+import { composeUserTenantFilterParams } from 'src/utils/queryUtils';
 
 @Injectable()
 export class UserService {
@@ -40,7 +40,7 @@ export class UserService {
         id: filterParams.params.id,
       });
     } else {
-      const filters = composeFilterParams(filterParams);
+      const filters = composeUserTenantFilterParams(filterParams);
       users = await this.userRepository.findAndCount(filters);
     }
 

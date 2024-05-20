@@ -24,6 +24,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import path = require('path');
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { GenericService } from './services/generic';
+import { GenericResolver } from './resolvers/generic';
 
 @Module({
   imports: [
@@ -67,6 +69,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
     UserService,
     RoleService,
     PermissionService,
+    GenericService,
 
     // Resolvers
     TenantsResolver,
@@ -74,6 +77,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
     UsersResolver,
     RolesResolver,
     PermissionsResolver,
+    GenericResolver,
   ],
 })
 export class AppModule {}

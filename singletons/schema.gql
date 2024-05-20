@@ -133,8 +133,36 @@ enum TenantType {
 }
 
 type Query {
+  filterRoles(filterParams: FilterRoleInput!, page: Float = 1, itemsPerPage: Float = 10, orderBy: String = ""): JSON!
   getHello: String!
+  filterPermissions(filterParams: FilterPermissionInput!, page: Float = 1, itemsPerPage: Float = 10, orderBy: String = ""): JSON!
   getOptionValues(optionName: String!): [String!]!
+}
+
+input FilterRoleInput {
+  id: ID
+  role: String
+  canBePassedAsDefault: Boolean
+
+  """Comma seperated string of IDs of permissions"""
+  permissions: String
+  isApproved: Boolean
+  pendingUpdateJson: JSON
+  createdAt: DateTime
+  updatedAt: DateTime
+  lastUpdatedBy: String
+}
+
+input FilterPermissionInput {
+  id: ID
+  permission: String
+  permissionEffectGroup: PermissionEffectGroup
+  permissionScope: PermissionScope
+  isApproved: Boolean
+  pendingUpdateJson: JSON
+  createdAt: DateTime
+  updatedAt: DateTime
+  lastUpdatedBy: String
 }
 
 type Mutation {
@@ -159,7 +187,6 @@ input TenantInput {
 
   """Comma seperated string of Ids of sub tenants"""
   subTenants: String
-  lastUpdatedBy: String!
 }
 
 input TestAccountUpdateInput {
@@ -176,7 +203,6 @@ input TestAccountUpdateInput {
 
   """Comma seperated string of Role Ids"""
   role: String
-  lastUpdatedBy: String
 }
 
 input TestAccountInput {
@@ -193,7 +219,6 @@ input TestAccountInput {
 
   """Comma seperated string of Role Ids"""
   role: String
-  lastUpdatedBy: String!
 }
 
 input UserInput {
@@ -204,7 +229,6 @@ input UserInput {
 
   """Comma seperated string of Role Ids"""
   role: String
-  lastUpdatedBy: String!
 }
 
 enum UserTypes {
@@ -221,7 +245,6 @@ input UserUpdateInput {
 
   """Comma seperated string of Role Ids"""
   role: String
-  lastUpdatedBy: String
 }
 
 input RoleInput {
@@ -231,7 +254,6 @@ input RoleInput {
   """If blank , will pass default permission"""
   permissions: String
   isApproved: Boolean!
-  lastUpdatedBy: String!
 }
 
 input RoleUpdateInput {
@@ -241,7 +263,6 @@ input RoleUpdateInput {
   """If blank , will pass default permission"""
   permissions: String
   isApproved: Boolean
-  lastUpdatedBy: String
 }
 
 input PermissionInput {
@@ -249,7 +270,6 @@ input PermissionInput {
   isApproved: Boolean!
   permissionEffectGroup: PermissionEffectGroup!
   permissionScope: PermissionScope!
-  lastUpdatedBy: String!
 }
 
 input PermissionUpdateInput {
@@ -257,5 +277,4 @@ input PermissionUpdateInput {
   isApproved: Boolean
   permissionEffectGroup: PermissionEffectGroup
   permissionScope: PermissionScope
-  lastUpdatedBy: String
 }

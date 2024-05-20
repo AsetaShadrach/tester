@@ -7,7 +7,7 @@ import {
   TenantInput,
   TenantUpdateInput,
 } from 'project_orms/dist/inputs/singeltonIn';
-import { composeFilterParams } from 'src/utils/queryUtils';
+import { composeUserTenantFilterParams } from 'src/utils/queryUtils';
 
 @Injectable()
 export class TenantService {
@@ -40,7 +40,7 @@ export class TenantService {
         id: filterParams.params.id,
       });
     } else {
-      const filters = composeFilterParams(filterParams);
+      const filters = composeUserTenantFilterParams(filterParams);
       tenants = await this.tenantRepository.findAndCount(filters);
     }
 

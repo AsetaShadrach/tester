@@ -7,7 +7,7 @@ import {
   TestAccountInput,
   TestAccountUpdateInput,
 } from 'project_orms/dist/inputs/singeltonIn';
-import { composeFilterParams } from 'src/utils/queryUtils';
+import { composeUserTenantFilterParams } from 'src/utils/queryUtils';
 
 @Injectable()
 export class TestAccountService {
@@ -41,7 +41,7 @@ export class TestAccountService {
         id: filterParams.params.id,
       });
     } else {
-      const filters = composeFilterParams(filterParams);
+      const filters = composeUserTenantFilterParams(filterParams);
       tAs = await this.testAccountRepository.findAndCount(filters);
     }
 
